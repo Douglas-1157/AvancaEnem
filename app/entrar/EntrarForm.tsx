@@ -1,4 +1,5 @@
 'use client';
+import { IlEstudante } from '@/components/Ilustracoes';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -39,7 +40,7 @@ setEnviado(true);
     <div className="login full-bleed">
       <div className="lform">
         <Link href="/" className="btn sm ghost" style={{ alignSelf: 'flex-start', paddingLeft: 0 }}><Icon n="left" s={14} /> Voltar ao início</Link>
-        <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>EduConecta</b><div className="sub" style={{ fontSize: 13 }}>Esquenta pro ENEM</div></div></div>
+        <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>Avança ENEM</b><div className="sub" style={{ fontSize: 13 }}>Plataforma de estudos</div></div></div>
         {enviado ? (
           <>
             <h1 className="h1">Cadastro enviado</h1>
@@ -72,6 +73,7 @@ setEnviado(true);
         )}
       </div>
       <div className="lart">
+        <IlEstudante className="lart-il" />
         <div className="hwave" aria-hidden="true">{Array.from({ length: 70 }, (_, k) => <i key={k} style={{ ['--c' as any]: k % 14, ['--r' as any]: Math.floor(k / 14) }} />)}</div>
         <h2>Trilhas, simulados e apostilas para estudar no seu ritmo.</h2>
         <p>Humanas, linguagens, matemática, natureza e redação em um só lugar, com acompanhamento do professor.</p>

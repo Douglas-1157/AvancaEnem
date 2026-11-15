@@ -1,4 +1,5 @@
 'use server';
+import { after } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabaseServer } from '../supabase/server';
 import { supabaseAdmin } from '../supabase/admin';
@@ -173,8 +174,10 @@ export async function decidirCadastro(id: string, aprovar: boolean) {
   const { data: alvo } = await e.db.from('profiles').select('nome,status').eq('id', id).single();
   const { error } = await e.db.from('profiles').update({ status: aprovar ? 'ativo' : 'recusado' }).eq('id', id);
   if (!error && alvo && aprovar && alvo.status !== 'ativo') {
-    const to = await emailDoUsuario(id);
-    if (to) await enviarEmail({ to, subject: 'Seu acesso ao EduConecta foi liberado', html: `<p>Olá, ${esc(alvo.nome)}!</p><p>A gestão autorizou o seu acesso. Já é possível entrar no EduConecta com o seu e-mail e a senha cadastrada.</p>` });
+    after(async () => {
+      const to = await emailDoUsuario(id);
+      if (to) await enviarEmail({ to, subject: 'Seu acesso ao Avança ENEM foi liberado', html: `<p>Olá, ${esc(alvo.nome)}!</p><p>A gestão autorizou o seu acesso. Já é possível entrar no Avança ENEM com o seu e-mail e a senha cadastrada.</p>` });
+    });
   }
   revalidatePath('/gestao', 'layout');
 }
@@ -223,6 +226,19 @@ export async function definirTurmasProfessor(_: Estado, fd: FormData): Promise<E
   return ok(turmas.length ? 'Disciplina e turmas atualizadas.' : 'Sem turmas marcadas: o professor não verá nenhuma turma.');
 }
 
+
+// Divide uma linha de CSV respeitando campos entre aspas (ex.: "Silva, João").
+function campos(linha: string, sep: string): string[] {
+  const out: string[] = []; let atual = ''; let aspas = false;
+  for (let i = 0; i < linha.length; i++) {
+    const ch = linha[i];
+    if (ch === '"') { if (aspas && linha[i + 1] === '"') { atual += '"'; i++; } else aspas = !aspas; }
+    else if (ch === sep && !aspas) { out.push(atual.trim()); atual = ''; }
+    else atual += ch;
+  }
+  out.push(atual.trim()); return out;
+}
+
 // Importa alunos de uma planilha salva como CSV (colunas: nome, email, matricula, turma).
 export async function importarAlunos(_: Estado, fd: FormData): Promise<Estado> {
   const e = await gestao(); if (!e) return no('Apenas a gestão importa alunos.');
@@ -230,12 +246,15 @@ export async function importarAlunos(_: Estado, fd: FormData): Promise<Estado> {
   if (!(arq instanceof File) || !arq.size) return no('Escolha o arquivo CSV.');
   if (senha.length < 8) return no('Defina uma senha provisória de 8+ caracteres.');
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return no('Falta configurar SUPABASE_SERVICE_ROLE_KEY no servidor.');
-  const texto = (await arq.text()).replace(/^﻿/, '');
+  const bytes = new Uint8Array(await arq.arrayBuffer());
+  let texto = new TextDecoder('utf-8').decode(bytes);
+  if (texto.includes('\uFFFD')) texto = new TextDecoder('windows-1252').decode(bytes); // CSV do Excel em ANSI
+  texto = texto.replace(/^\uFEFF/, '');
   const linhas = texto.split(/\r?\n/).filter(l => l.trim());
   if (linhas.length < 2) return no('O arquivo precisa do cabeçalho e de pelo menos um aluno.');
   const sep = linhas[0].split(';').length > linhas[0].split(',').length ? ';' : ',';
   const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
-  const cab = linhas[0].split(sep).map(norm);
+  const cab = campos(linhas[0], sep).map(norm);
   const col = (n: string) => cab.indexOf(n);
   const [iN, iE, iM, iT] = [col('nome'), col('email'), col('matricula'), col('turma')];
   if (iN < 0 || iE < 0) return no('O cabeçalho precisa ter as colunas "nome" e "email" (e, se quiser, "matricula" e "turma").');
@@ -243,16 +262,19 @@ export async function importarAlunos(_: Estado, fd: FormData): Promise<Estado> {
   const { data: turmas } = await e.db.from('turmas').select('id,nome');
   const porNome = new Map((turmas ?? []).map(t => [norm(t.nome), t.id]));
   const admin = supabaseAdmin(); let criados = 0; const erros: string[] = [];
-  for (let i = 1; i < linhas.length; i++) {
-    const c = linhas[i].split(sep).map(x => x.trim().replace(/^"|"$/g, ''));
+  const um = async (i: number) => {
+    const c = campos(linhas[i], sep);
     const nome = c[iN], email = c[iE]?.toLowerCase();
-    if (!nome || !email || !/^\S+@\S+\.\S+$/.test(email)) { erros.push(`linha ${i + 1}: nome/e-mail inválido`); continue; }
+    if (!nome || !email || !/^\S+@\S+\.\S+$/.test(email)) { erros.push(`linha ${i + 1}: nome/e-mail inválido`); return; }
     const turma = iT >= 0 && c[iT] ? porNome.get(norm(c[iT])) : undefined;
-    if (iT >= 0 && c[iT] && !turma) { erros.push(`linha ${i + 1}: turma "${c[iT]}" não existe`); continue; }
+    if (iT >= 0 && c[iT] && !turma) { erros.push(`linha ${i + 1}: turma "${c[iT]}" não existe`); return; }
     const { data, error } = await admin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { nome, matricula: iM >= 0 ? c[iM] : '', turma_id: turma ?? '' }, app_metadata: { trocar_senha: true } });
-    if (error || !data.user) { erros.push(`linha ${i + 1}: ${/already|registered/i.test(error?.message ?? '') ? 'e-mail já cadastrado' : error?.message}`); continue; }
+    if (error || !data.user) { erros.push(`linha ${i + 1}: ${/already|registered/i.test(error?.message ?? '') ? 'e-mail já cadastrado' : error?.message}`); return; }
     await admin.from('profiles').update({ status: 'ativo' }).eq('id', data.user.id);
     criados++;
+  };
+  for (let i = 1; i < linhas.length; i += 5) {
+    await Promise.all(Array.from({ length: Math.min(5, linhas.length - i) }, (_, k) => um(i + k)));
   }
   revalidatePath('/gestao', 'layout');
   const resumo = `${criados} aluno(s) criado(s).`;

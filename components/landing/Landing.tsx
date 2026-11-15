@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Logo, Wordmark } from '@/components/Logo';
+import { IlTrilha } from '@/components/Ilustracoes';
 import { Pb } from '@/components/ui';
 import { ThemeBtn } from './ThemeBtn';
 import { ProfTabs } from './ProfTabs';
@@ -39,7 +40,7 @@ export function Landing() {
 
       <section className="wrap hero2"><div className="hgrid">
         <div>
-          <span className="eyebrow"><i /> Esquenta pro ENEM</span>
+          <span className="eyebrow"><i /> Plataforma de estudos para o ENEM</span>
           <h1>O ENEM inteiro, <em>um passo de cada vez.</em></h1>
           <p className="lead">Trilhas, apostilas, simulados e redação das quatro áreas do ENEM, com o professor acompanhando de perto. Feito para a nossa escola.</p>
           <div className="row" style={{ marginTop: 28 }}><Link className="btn dk lg" href="/entrar">Entrar na plataforma <Icon n="arrow" s={16} /></Link><a className="btn lg" href="#como">Ver como funciona</a></div>
@@ -105,11 +106,12 @@ export function Landing() {
 
       <section className="cta2"><div className="wrap">
         <div className="cwave" aria-hidden="true">{ONDA.map((o, k) => <i key={k} style={{ ['--c' as any]: o.c, ['--r' as any]: o.r }} />)}</div>
-        <h2>Pronto para começar o esquenta?</h2><p>Crie sua conta de aluno ou entre com o acesso que a escola te passou.</p>
+        <div className="ilbox"><IlTrilha /></div>
+        <h2>Pronto para avançar rumo ao ENEM?</h2><p>Crie sua conta de aluno ou entre com o acesso que a escola te passou.</p>
         <div className="row" style={{ justifyContent: 'center' }}><Link className="btn dk lg" href="/entrar?criar=1">Criar conta de aluno</Link><Link className="btn lg" href="/entrar">Já tenho conta</Link></div>
       </div></section>
 
-      <footer className="wrap lfoot"><span className="row" style={{ gap: 10 }}><Logo size={28} /><Wordmark /><span>© {new Date().getFullYear()} · Esquenta pro ENEM</span></span>
+      <footer className="wrap lfoot"><span className="row" style={{ gap: 10 }}><Logo size={28} /><Wordmark /><span>© {new Date().getFullYear()} · Plataforma de estudos para o ENEM</span></span>
         <nav>{NAV.map(([id, l]) => <a key={id} href={`#${id}`} style={{ color: 'var(--mute)', padding: '6px 8px' }}>{l}</a>)}</nav></footer>
     </div>
   );

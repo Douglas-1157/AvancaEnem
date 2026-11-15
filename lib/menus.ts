@@ -11,6 +11,7 @@ export function menuDe(papel: Papel, pendentes = { duvidas: 0, redacoes: 0, cada
         { href: '/aluno/redacao', label: 'Redação', icon: 'file' },
         { href: '/aluno/duvidas', label: 'Dúvidas', icon: 'chat', badge: pendentes.duvidas },
         { href: '/aluno/biblioteca', label: 'Biblioteca', icon: 'book', mobile: false },
+        { href: '/aluno/foco', label: 'Foco', icon: 'timer', mobile: false },
       ],
       extra: [{ href: '/aluno/biblioteca', label: 'Biblioteca', icon: 'book' }, { href: '/aluno/foco', label: 'Bloco de foco', icon: 'timer' }],
     };

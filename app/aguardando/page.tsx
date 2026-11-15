@@ -13,7 +13,7 @@ export default async function Aguardando() {
   return (
     <div className="login full-bleed" style={{ gridTemplateColumns: '1fr' }}>
       <div className="lform" style={{ maxWidth: 520, margin: '0 auto' }}>
-        <div className="row"><Logo /><b>EduConecta</b></div>
+        <div className="row"><Logo /><b>Avança ENEM</b></div>
         <h1 className="h1">{p?.status === 'recusado' ? 'Cadastro não aprovado' : 'Aguardando aprovação'}</h1>
         <p className="sub">{p?.status === 'recusado' ? 'A gestão da escola não aprovou este cadastro. Procure a coordenação para saber mais.' : `Olá${p?.nome ? ', ' + p.nome.split(' ')[0] : ''}! Seu cadastro foi recebido. Assim que a gestão da escola aprovar, o acesso é liberado. Volte aqui depois.`}</p>
         <SairBotao />

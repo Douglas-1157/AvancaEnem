@@ -29,3 +29,15 @@ export async function redefinirSenha(_: Estado, fd: FormData): Promise<Estado> {
   if (user.app_metadata?.trocar_senha) await supabaseAdmin().auth.admin.updateUserById(user.id, { app_metadata: { trocar_senha: false } });
   redirect('/painel');
 }
+
+// Confirma o link de recuperação enviado por e-mail. Usa o token do próprio link (não depende do navegador
+// em que o pedido foi feito) e só roda quando a pessoa clica no botão, o que evita que o antivírus/leitor
+// de e-mail "gaste" o link antes dela.
+export async function confirmarLink(fd: FormData): Promise<void> {
+  const token_hash = String(fd.get('token_hash') ?? '');
+  if (!token_hash) redirect('/recuperar?erro=1');
+  const db = await supabaseServer();
+  const { error } = await db.auth.verifyOtp({ token_hash, type: 'recovery' });
+  if (error) redirect('/recuperar?erro=1');
+  redirect('/redefinir');
+}

@@ -27,22 +27,23 @@ export function Shell({ menu, extra, nome, papel, children }: { menu: ItemMenu[]
   return (
     <div className="app">
       <aside className="side" aria-label="Menu principal">
-        <div className="brand"><Logo /><div><b>EduConecta</b><small>{papel}</small></div></div>
+        <div className="brand" title="Avança ENEM"><Logo /><div><b>Avança ENEM</b><small>{papel}</small></div></div>
         <nav>
           {menu.map(m => (
-            <Link key={m.href} href={m.href} className={`nv${ativo(m) ? ' on' : ''}`} aria-current={ativo(m) ? 'page' : undefined}>
+            <Link key={m.href} href={m.href} title={m.label} className={`nv${ativo(m) ? ' on' : ''}`} aria-current={ativo(m) ? 'page' : undefined}>
               <Icon n={m.icon} /><span>{m.label}</span>{m.badge ? <span className="badge">{m.badge}</span> : null}
             </Link>
           ))}
         </nav>
         <span className="sp" />
-        <button className="nv" onClick={alternarTema}><Icon n="sun" /><span>Tema</span></button>
-        <button className="nv" onClick={sair}><Icon n="out" /><span>Sair</span></button>
+        <button className="nv" onClick={alternarTema} title="Alternar tema"><Icon n="sun" /><span>Tema</span></button>
+        <button className="nv" onClick={sair} title="Sair"><Icon n="out" /><span>Sair</span></button>
       </aside>
       <main className="main">
         <div className="top">
           <Logo size={32} className="only-m" />
           <span className="sp" />
+          <span className="who-top"><b>{nome}</b><small>{papel}</small></span>
           <button className="av" onClick={() => setAberto(!aberto)} aria-label="Menu da conta" aria-expanded={aberto}>{iniciais(nome)}</button>
           {aberto && (
             <div className="menu">

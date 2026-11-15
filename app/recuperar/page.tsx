@@ -7,7 +7,7 @@ export default async function Recuperar({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   return (
     <div className="login full-bleed"><div className="lform">
-      <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>EduConecta</b><div className="sub" style={{ fontSize: 13 }}>Esquenta pro ENEM</div></div></div>
+      <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>Avança ENEM</b><div className="sub" style={{ fontSize: 13 }}>Plataforma de estudos</div></div></div>
       <h1 className="h1">Recuperar senha</h1>
       <p className="sub">Informe o e-mail do seu cadastro. Enviaremos um link para criar uma nova senha.</p>
       {sp.erro && <p className="erro" role="alert">O link expirou ou já foi usado. Peça um novo abaixo.</p>}

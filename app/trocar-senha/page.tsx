@@ -13,7 +13,7 @@ export default async function TrocarSenha() {
   if (!user.app_metadata?.trocar_senha) redirect('/painel');
   return (
     <div className="login full-bleed"><div className="lform">
-      <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>EduConecta</b><div className="sub" style={{ fontSize: 13 }}>Esquenta pro ENEM</div></div></div>
+      <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>Avança ENEM</b><div className="sub" style={{ fontSize: 13 }}>Plataforma de estudos</div></div></div>
       <h1 className="h1">Crie a sua senha</h1>
       <p className="sub">Você entrou com uma senha provisória. Escolha uma senha só sua para continuar.</p>
       <Form action={redefinirSenha} botao="Salvar e entrar">

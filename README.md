@@ -1,4 +1,4 @@
-# EduConecta · Esquenta pro ENEM
+# Avança ENEM
 
 Plataforma de estudos para o ENEM de **uma escola**: trilhas, apostilas, simulados, banco de questões, redação corrigida pelo professor, dúvidas e acompanhamento. Perfis: **aluno**, **professor** e **gestão da escola**.
 
@@ -80,7 +80,7 @@ Rode também `0005_professor_turmas.sql` e `0006_endurecimento.sql` (Supabase �
 No painel do Supabase: Authentication → Providers → Email: senha mínima 8+, e ative proteção de senha vazada (Leaked password protection) se disponível; em Authentication → URL Configuration, deixe só o domínio da Vercel.
 
 ## E-mails (Resend)
-Variáveis na Vercel: `RESEND_API_KEY` e, com domínio verificado no Resend, `EMAIL_FROM` (ex.: `EduConecta <avisos@seudominio.com.br>`).
+Variáveis na Vercel: `RESEND_API_KEY` e, com domínio verificado no Resend, `EMAIL_FROM` (ex.: `Avança ENEM <avisos@seudominio.com.br>`).
 Sem a chave o sistema funciona normalmente, só não envia e-mails. Avisos: cadastro recebido (aluno), novo aluno (gestão) e acesso liberado (aluno).
 
 ## Recuperação de senha

@@ -7,7 +7,7 @@ const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${St
 
 export function Foco() {
   const [dur, setDur] = useState(25); const [left, setLeft] = useState(25 * 60); const [run, setRun] = useState(false); const [msg, setMsg] = useState('');
-  const fim = useRef<number | null>(null); const r = useRouter();
+  const fim = useRef<number | null>(null); const registrando = useRef(false); const r = useRouter();
   const gastoMin = (dur * 60 - left) / 60;
 
   useEffect(() => {
@@ -18,10 +18,14 @@ export function Foco() {
   }, [run, dur]);
 
   async function concluir(min: number) {
+    if (registrando.current) return;
     const m = Math.floor(min); if (m < 1) { setMsg('Estude pelo menos 1 minuto para registrar.'); return; }
-    const x = await registrarFoco(m);
-    setMsg(x.ok ? `${m} min somados à sua meta da semana.` : x.erro ?? 'Não foi possível registrar.');
-    setLeft(dur * 60); r.refresh();
+    registrando.current = true;
+    try {
+      const x = await registrarFoco(m);
+      setMsg(x.ok ? `${m} min somados à sua meta da semana.` : x.erro ?? 'Não foi possível registrar.');
+      setLeft(dur * 60); r.refresh();
+    } finally { registrando.current = false; }
   }
   const trocar = (m: number) => { setDur(m); setLeft(m * 60); setRun(false); };
   const alternar = () => { if (!run) fim.current = Date.now() + left * 1000; setRun(!run); };

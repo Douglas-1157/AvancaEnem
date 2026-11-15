@@ -4,6 +4,7 @@ import { Acao, Form } from '@/components/Form';
 import { criarProfessor, decidirCadastro, definirTurmasProfessor, importarAlunos } from '@/lib/acoes/equipe';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export default async function Cadastros() {
   const { db } = await exigirPerfil('gestao');
