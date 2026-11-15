@@ -17,6 +17,13 @@ export function Foco() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, dur]);
 
+  // mostra a contagem também na aba do navegador enquanto o cronômetro roda
+  useEffect(() => {
+    if (!run) return;
+    const antes = document.title; document.title = `${mmss(left)} · Foco`;
+    return () => { document.title = antes; };
+  }, [run, left]);
+
   async function concluir(min: number) {
     if (registrando.current) return;
     const m = Math.floor(min); if (m < 1) { setMsg('Estude pelo menos 1 minuto para registrar.'); return; }
@@ -34,7 +41,8 @@ export function Foco() {
     <div className="card">
       <div className="row sb"><span className="pill wip">Bloco de foco</span>
         <div className="tabs">{[15, 25, 50].map(m => <button key={m} className={dur === m ? 'on' : ''} onClick={() => trocar(m)} disabled={run}>{m} min</button>)}</div></div>
-      <div className="ptime" style={{ marginTop: 16 }}>{mmss(left)}</div>
+      <div className={`ptime${run ? ' run' : ''}`} style={{ marginTop: 16 }} role="timer" aria-live="off">{mmss(left)}</div>
+      <div style={{ margin: '4px 0 18px' }}><div className="pb"><i style={{ width: `${Math.round(((dur * 60 - left) / (dur * 60)) * 100)}%` }} /></div></div>
       <div className="row" style={{ justifyContent: 'center' }}>
         <button className="btn pri lg" onClick={alternar}>{run ? 'Pausar' : left < dur * 60 ? 'Continuar' : 'Iniciar'}</button>
         <button className="btn" onClick={() => { setRun(false); setLeft(dur * 60); }}>Reiniciar</button>

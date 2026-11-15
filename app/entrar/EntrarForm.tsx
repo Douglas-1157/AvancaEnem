@@ -1,4 +1,5 @@
 'use client';
+import { CampoSenha } from '@/components/CampoSenha';
 import { IlEstudante } from '@/components/Ilustracoes';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -60,7 +61,7 @@ setEnviado(true);
                   </select></div>
               </>}
               <div className={`field${modo === 'criar' ? ' full' : ''}`}><label htmlFor="email">E-mail</label><input className="inp" id="email" name="email" type="email" required autoComplete="email" /></div>
-              <div className={`field${modo === 'criar' ? ' full' : ''}`}><label htmlFor="senha">Senha</label><input className="inp" id="senha" name="senha" type="password" required minLength={8} autoComplete={modo === 'entrar' ? 'current-password' : 'new-password'} /></div>
+              <div className={`field${modo === 'criar' ? ' full' : ''}`}><label htmlFor="senha">Senha</label><CampoSenha id="senha" name="senha" autoComplete={modo === 'entrar' ? 'current-password' : 'new-password'} /></div>
               {modo === 'criar' && <p className="note full">Seu cadastro fica pendente até a gestão da escola aprovar. Professores recebem o acesso direto da gestão.</p>}
               {erro && <p className="erro full" role="alert">{erro}</p>}
               <div className="full row"><button className="btn pri lg" type="submit" disabled={ocupado}>{ocupado ? 'Aguarde…' : modo === 'entrar' ? 'Entrar' : 'Enviar cadastro'}</button></div>

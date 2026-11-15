@@ -1,3 +1,4 @@
+import { CampoSenha } from '@/components/CampoSenha';
 import { redirect } from 'next/navigation';
 import { Form } from '@/components/Form';
 import { Logo } from '@/components/Logo';
@@ -14,8 +15,8 @@ export default async function Redefinir() {
       <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>Avança ENEM</b><div className="sub" style={{ fontSize: 13 }}>Plataforma de estudos</div></div></div>
       <h1 className="h1">Nova senha</h1>
       <Form action={redefinirSenha} botao="Salvar nova senha">
-        <div className="field full"><label htmlFor="ns">Nova senha (8+ caracteres)</label><input className="inp" id="ns" name="senha" type="password" required minLength={8} autoComplete="new-password" /></div>
-        <div className="field full"><label htmlFor="nc">Repita a senha</label><input className="inp" id="nc" name="conf" type="password" required minLength={8} autoComplete="new-password" /></div>
+        <div className="field full"><label htmlFor="ns">Nova senha (8+ caracteres)</label><CampoSenha id="ns" name="senha" autoComplete="new-password" /></div>
+        <div className="field full"><label htmlFor="nc">Repita a senha</label><CampoSenha id="nc" name="conf" autoComplete="new-password" /></div>
       </Form>
     </div></div>
   );
