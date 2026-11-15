@@ -6,6 +6,7 @@ import { Icon } from './Icon';
 import { Logo } from './Logo';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { iniciais } from '@/lib/tipos';
+import { useFoco, mmss } from '@/lib/foco';
 
 export type ItemMenu = { href: string; label: string; icon: string; badge?: number; mobile?: boolean; exato?: boolean };
 
@@ -14,6 +15,24 @@ export function alternarTema() {
   const escuro = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
   r.dataset.theme = escuro ? 'light' : 'dark';
   try { localStorage.setItem('tema', r.dataset.theme); } catch { /* ignore */ }
+}
+
+// Cronômetro de foco no canto superior: aparece em qualquer tela do aluno enquanto estiver em andamento.
+function FocoTopo() {
+  const f = useFoco(); const r = useRouter();
+  const fim = f.rodando && f.left === 0;
+  useEffect(() => { if (fim) f.concluir(f.dur).then(ok => { if (ok) r.refresh(); }); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [fim]);
+  useEffect(() => {
+    if (!f.rodando) return;
+    const antes = document.title; document.title = `${mmss(f.left)} · Foco`;
+    return () => { document.title = antes; };
+  }, [f.rodando, f.left]);
+  if (!f.emAndamento) return null;
+  return (
+    <Link href="/aluno/foco" className={`foco-top${f.rodando ? ' run' : ''}`} title="Cronômetro de foco" aria-label={`Cronômetro de foco: ${mmss(f.left)}`}>
+      <Icon n="timer" s={16} /><b>{mmss(f.left)}</b>
+    </Link>
+  );
 }
 
 export function Shell({ menu, extra, nome, papel, children }: { menu: ItemMenu[]; extra?: ItemMenu[]; nome: string; papel: string; children: ReactNode }) {
@@ -43,6 +62,7 @@ export function Shell({ menu, extra, nome, papel, children }: { menu: ItemMenu[]
         <div className="top">
           <Logo size={32} className="only-m" />
           <span className="sp" />
+          {path.startsWith('/aluno') && <FocoTopo />}
           <span className="who-top"><b>{nome}</b><small>{papel}</small></span>
           <button className="av" onClick={() => setAberto(!aberto)} aria-label="Menu da conta" aria-expanded={aberto}>{iniciais(nome)}</button>
           {aberto && (
