@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Form, type Estado } from '@/components/Form';
+import { Bloco } from '@/components/Painel';
 
 type A = (p: Estado, f: FormData) => Promise<Estado>;
 type D = { id: string; nome: string; area: string }; type C = { id: string; area: string; codigo: string; nome: string }; type T = { id: string; nome: string };
@@ -9,6 +10,7 @@ type Q = { id: string; enunciado: string; disciplina_id: string; n: number; comp
 export function Banco({ disciplinas, competencias, turmas, modulos, questoes, criarQuestao, criarSimulado, padrao }: { padrao?: string;
   disciplinas: D[]; competencias: C[]; turmas: T[]; modulos: { id: string; nome: string; disciplina_id: string }[]; questoes: Q[]; criarQuestao: A; criarSimulado: A;
 }) {
+  const [sel, setSel] = useState<string[]>([]); const [tq, setTq] = useState('2');
   const [aba, setAba] = useState<'banco' | 'nova' | 'simulado'>('banco'); const [fd, setFd] = useState('');
   const [d, setD] = useState(disciplinas.find(x => x.id === padrao)?.id ?? disciplinas[0]?.id ?? '');
   const area = disciplinas.find(x => x.id === d)?.area;
@@ -23,29 +25,30 @@ export function Banco({ disciplinas, competencias, turmas, modulos, questoes, cr
         </div>
       )}
       {aba === 'nova' && (
-        <div className="card"><h2 className="h2">Nova questão</h2>
+        <Bloco ic="plus" titulo="Nova questão" sub="Enunciado, alternativas e o comentário que o aluno vê depois da entrega.">
           <Form action={criarQuestao} botao="Salvar no banco">
             <div className="field"><label htmlFor="qd">Disciplina</label><select id="qd" name="disciplina_id" className="inp" value={d} onChange={e => setD(e.target.value)}>{disciplinas.map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}</select></div>
             <div className="field"><label htmlFor="qc">Competência</label><select id="qc" name="competencia_id" className="inp" defaultValue=""><option value="">Nenhuma</option>{competencias.filter(c => c.area === area).map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nome}</option>)}</select><input name="competencia_nova" className="inp" placeholder="ou escreva outra competência" maxLength={80} style={{ marginTop: 6 }} /></div>
             <div className="field full"><label htmlFor="qe">Enunciado</label><textarea id="qe" name="enunciado" className="inp" required /></div>
             {[0, 1, 2, 3, 4].map(i => <div key={i} className="field full"><label htmlFor={`a${i}`}>Alternativa {'ABCDE'[i]}{i > 1 ? ' (opcional)' : ''}</label><div className="row" style={{ flexWrap: 'nowrap' }}><input id={`a${i}`} name={`alt${i}`} className="inp" required={i < 2} /><label className="chip" style={{ whiteSpace: 'nowrap', cursor: 'pointer' }}><input type="radio" name="correta" value={i} required style={{ marginRight: 6 }} />correta</label></div></div>)}
             <div className="field full"><label htmlFor="qj">Comentário do gabarito (aparece depois da entrega)</label><textarea id="qj" name="comentario" className="inp" /></div>
-          </Form></div>
+          </Form></Bloco>
       )}
       {aba === 'simulado' && (
-        <div className="card"><h2 className="h2">Montar simulado</h2>
+        <Bloco ic="exam" titulo="Montar simulado" sub="Escolha as questões e o tempo de cada uma. O total é calculado sozinho.">
           <Form action={criarSimulado} botao="Publicar simulado">
             <div className="field full"><label htmlFor="st">Título</label><input id="st" name="titulo" className="inp" required /></div>
             <div className="field"><label htmlFor="sd">Disciplina</label><select id="sd" name="disciplina_id" className="inp" value={d} onChange={e => setD(e.target.value)}><option value="">Geral (várias)</option>{disciplinas.map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}</select></div>
-            <div className="field"><label htmlFor="sm">Tempo (min)</label><input id="sm" name="minutos" type="number" min={5} defaultValue={30} className="inp" /></div>
+            <div className="field"><label htmlFor="sm">Tempo por questão (min)</label><input id="sm" name="tempo_questao" type="number" min={0.5} step={0.5} value={tq} onChange={e => setTq(e.target.value)} className="inp" />
+              <small className="sub">{sel.length ? `Total: ${Math.min(300, Math.max(5, Math.ceil((Number(tq) || 0) * sel.length)))} min para ${sel.length} questão(ões).` : 'O total é calculado: tempo por questão × número de questões escolhidas.'}</small></div>
             <div className="field"><label htmlFor="smo">Encaixar na trilha (opcional)</label><select id="smo" name="modulo_id" className="inp" defaultValue=""><option value="">Fora da trilha</option>{modulos.filter(m => m.disciplina_id === d).map(m => <option key={m.id} value={m.id}>Fim de “{m.nome}”</option>)}</select></div>
             <div className="field"><label htmlFor="sp">Prazo (opcional)</label><input id="sp" name="prazo" type="date" className="inp" /></div>
             <div className="field full"><span className="sub" style={{ fontSize: 13, fontWeight: 500 }}>Turmas</span><div className="chips">{turmas.map(t => <label key={t.id} className="chip" style={{ cursor: 'pointer' }}><input type="checkbox" name="turmas" value={t.id} defaultChecked style={{ marginRight: 6 }} />{t.nome}</label>)}</div></div>
             <div className="field full"><span className="sub" style={{ fontSize: 13, fontWeight: 500 }}>Questões ({questoes.filter(q => !d || q.disciplina_id === d).length} da disciplina escolhida)</span>
               <div className="list" style={{ maxHeight: 320, overflow: 'auto', border: '1px solid var(--line)', borderRadius: 10, padding: '0 12px' }}>
-                {questoes.filter(q => !d || q.disciplina_id === d).map(q => <label key={q.id} className="li" style={{ cursor: 'pointer' }}><input type="checkbox" name="questoes" value={q.id} /><div className="tx"><b className="trunc" style={{ display: 'block' }}>{q.enunciado}</b><small>{q.comp ? `comp. ${q.comp}` : 'sem competência'}</small></div></label>)}
+                {questoes.filter(q => !d || q.disciplina_id === d).map(q => <label key={q.id} className="li" style={{ cursor: 'pointer' }}><input type="checkbox" name="questoes" value={q.id} checked={sel.includes(q.id)} onChange={e => setSel(e.target.checked ? [...sel, q.id] : sel.filter(x => x !== q.id))} /><div className="tx"><b className="trunc" style={{ display: 'block' }}>{q.enunciado}</b><small>{q.comp ? `comp. ${q.comp}` : 'sem competência'}</small></div></label>)}
               </div></div>
-          </Form></div>
+          </Form></Bloco>
       )}
     </>
   );

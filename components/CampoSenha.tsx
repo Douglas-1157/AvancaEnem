@@ -9,7 +9,7 @@ export function CampoSenha({ id, name, autoComplete, minLength = 8 }: { id: stri
     <div className="pw">
       <input className="inp" id={id} name={name} type={ver ? 'text' : 'password'} required minLength={minLength} autoComplete={autoComplete} />
       <button type="button" className="pw-b" onClick={() => setVer(!ver)} aria-label={ver ? 'Ocultar senha' : 'Mostrar senha'} aria-pressed={ver} title={ver ? 'Ocultar senha' : 'Mostrar senha'}>
-        {ver ? 'Ocultar' : 'Mostrar'}
+        <Icon n={ver ? 'eyeoff' : 'eye'} s={20} />
       </button>
     </div>
   );

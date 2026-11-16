@@ -2,6 +2,7 @@ import { exigirPerfil } from '@/lib/sessao';
 import { turmasVisiveis } from '@/lib/escopo';
 import { criarQuestao, criarSimulado } from '@/lib/acoes/equipe';
 import { Banco } from './Banco';
+import { Cab } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,8 @@ export default async function BancoPage() {
   ]);
   return (
     <>
-      <div><h1 className="h1">Banco de questões</h1><p className="sub">Cadastre questões com gabarito comentado e monte simulados para as turmas.</p></div>
+      <Cab titulo="Banco de questões" sub="Cadastre questões com gabarito comentado e monte simulados para as turmas."
+        info={[['Questões', qs?.length ?? 0], ['Simulados publicados', sims?.length ?? 0], ['Disciplinas', disc?.length ?? 0], ['Turmas', turmas?.length ?? 0]]} />
       <Banco padrao={perfil.disciplina_id ?? undefined} disciplinas={disc ?? []} competencias={comps ?? []} turmas={turmas ?? []} modulos={mods ?? []}
         questoes={(qs ?? []).map((q: any) => ({ id: q.id, enunciado: q.enunciado, disciplina_id: q.disciplina_id, n: q.alternativas.length, comp: q.competencias?.codigo ?? null }))}
         criarQuestao={criarQuestao} criarSimulado={criarSimulado} />

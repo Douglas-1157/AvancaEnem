@@ -3,6 +3,7 @@ import { exigirPerfil } from '@/lib/sessao';
 import { turmasVisiveis } from '@/lib/escopo';
 import { Av } from '@/components/ui';
 import { Form } from '@/components/Form';
+import { Cab } from '@/components/Painel';
 import { criarTemaRedacao } from '@/lib/acoes/equipe';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,11 @@ export const dynamic = 'force-dynamic';
 export default async function Redacoes({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
   const sp = await searchParams; const aba = sp.aba === 'corrigidas' ? 'corrigida' : 'enviada';
   const { db, perfil } = await exigirPerfil();
+  const [{ count: nEnv }, { data: corr }] = await Promise.all([
+    db.from('redacoes').select('id', { count: 'exact', head: true }).eq('status', 'enviada'),
+    db.from('redacoes').select('nota').eq('status', 'corrigida').limit(500),
+  ]);
+  const mediaNota = corr?.length ? Math.round(corr.reduce((a: number, r: any) => a + (r.nota ?? 0), 0) / corr.length) : null;
   const [{ data: reds }, { data: turmas }, { data: temas }] = await Promise.all([
     db.from('redacoes').select('id,nota,enviada_em,corrigida_em,profiles!redacoes_aluno_id_fkey(nome),redacao_temas(titulo)').eq('status', aba).order(aba === 'enviada' ? 'enviada_em' : 'corrigida_em', { ascending: aba === 'enviada' }),
     turmasVisiveis(db, perfil),
@@ -17,7 +23,8 @@ export default async function Redacoes({ searchParams }: { searchParams: Promise
   ]);
   return (
     <>
-      <div><h1 className="h1">Redações</h1><p className="sub">Corrija com as 5 competências do ENEM (0 a 200 cada) e deixe um comentário.</p></div>
+      <Cab titulo="Redações" sub="Corrija com as 5 competências do ENEM (0 a 200 cada) e deixe um comentário."
+        info={[['Para corrigir', nEnv ?? 0], ['Corrigidas', corr?.length ?? 0], ['Média das notas', mediaNota === null ? '—' : mediaNota], ['Temas publicados', temas?.length ?? 0]]} />
       <div className="tabs" role="tablist"><Link className={aba === 'enviada' ? 'on' : ''} href="?">Para corrigir</Link><Link className={aba === 'corrigida' ? 'on' : ''} href="?aba=corrigidas">Corrigidas</Link></div>
       <div className="cols">
         <div className="card"><div className="list">{reds?.length ? reds.map((r: any) => (

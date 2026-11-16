@@ -4,6 +4,7 @@ import { Form, Acao } from '@/components/Form';
 import { Icon } from '@/components/Icon';
 import { publicarItem, alternarPublicacao, apagarItem, criarRecurso, apagarRecurso } from '@/lib/acoes/equipe';
 import { FormItem } from './FormItem';
+import { Cab, Bloco } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,11 @@ export default async function Conteudo() {
   ]);
   return (
     <>
-      <div><h1 className="h1">Conteúdo</h1><p className="sub">Publique uma vez e escolha quais turmas recebem. Aulas, apostilas e simulados entram na trilha de cada disciplina.</p></div>
+      <Cab titulo="Conteúdo" sub="Publique uma vez e escolha quais turmas recebem. Aulas, apostilas e simulados entram na trilha de cada disciplina."
+        info={[['No ar', (itens ?? []).filter((i: any) => i.publicado).length], ['Ocultos', (itens ?? []).filter((i: any) => !i.publicado).length], ['Turmas', turmas?.length ?? 0], ['Itens na biblioteca', recursos?.length ?? 0]]} />
       <div className="cols">
-        <div className="card"><h2 className="h2">Nova aula ou apostila</h2>
-          <FormItem padrao={perfil.disciplina_id ?? undefined} disciplinas={disc ?? []} modulos={mods ?? []} competencias={comps ?? []} turmas={turmas ?? []} action={publicarItem} /></div>
+        <Bloco ic="plus" titulo="Nova aula ou apostila" sub="Escolha a disciplina, o módulo e as turmas que vão receber.">
+          <FormItem padrao={perfil.disciplina_id ?? undefined} disciplinas={disc ?? []} modulos={mods ?? []} competencias={comps ?? []} turmas={turmas ?? []} action={publicarItem} /></Bloco>
         <div className="stack">
           <div className="card"><h2 className="h2" style={{ marginBottom: 6 }}>Publicados recentemente</h2>
             <div className="list">{itens?.length ? itens.map((i: any) => (
@@ -31,7 +33,7 @@ export default async function Conteudo() {
                 <span className={`pill ${i.publicado ? 'ok' : ''}`}>{i.publicado ? 'No ar' : 'Oculto'}</span>
                 <Acao action={alternarPublicacao.bind(null, i.id, !i.publicado) as any}>{i.publicado ? 'Ocultar' : 'Publicar'}</Acao>
                 <Acao className="btn sm ghost" confirmar="Apagar este item? O progresso dos alunos nele também será apagado." action={apagarItem.bind(null, i.id) as any}>Apagar</Acao></div>)) : <div className="empty">Nada publicado ainda.</div>}</div></div>
-          <div className="card"><h2 className="h2">Biblioteca: cursos e repertório</h2>
+          <Bloco ic="globe" titulo="Biblioteca: cursos e repertório" sub="Indique cursos gratuitos e repertório para a redação.">
             <Form action={criarRecurso} botao="Adicionar">
               <div className="field"><label htmlFor="rt">Tipo</label><select id="rt" name="tipo" className="inp"><option value="curso">Curso gratuito</option><option value="repertorio">Conhecimento de mundo</option></select></div>
               <div className="field"><label htmlFor="rc">Categoria</label><input id="rc" name="categoria" className="inp" placeholder="História, Atualidades, Filmes…" /></div>
@@ -40,7 +42,7 @@ export default async function Conteudo() {
               <div className="field"><label htmlFor="rca">Carga horária (opcional)</label><input id="rca" name="carga" className="inp" placeholder="20 h" /></div>
               <div className="field"><label htmlFor="rd">Observação (opcional)</label><input id="rd" name="descricao" className="inp" placeholder="Com certificado" /></div>
             </Form>
-            <div className="list" style={{ marginTop: 10 }}>{recursos?.map(r => <div key={r.id} className="li"><div className="tx"><b>{r.titulo}</b><small>{r.tipo === 'curso' ? 'Curso' : 'Repertório'} · {r.categoria}</small></div><Acao className="btn sm ghost" action={apagarRecurso.bind(null, r.id) as any}>Remover</Acao></div>)}</div></div>
+            <div className="list" style={{ marginTop: 10 }}>{recursos?.map(r => <div key={r.id} className="li"><div className="tx"><b>{r.titulo}</b><small>{r.tipo === 'curso' ? 'Curso' : 'Repertório'} · {r.categoria}</small></div><Acao className="btn sm ghost" action={apagarRecurso.bind(null, r.id) as any}>Remover</Acao></div>)}</div></Bloco>
         </div>
       </div>
     </>

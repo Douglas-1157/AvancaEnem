@@ -3,6 +3,7 @@ import { exigirPerfil } from '@/lib/sessao';
 import { carregarTrilhas } from '@/lib/trilha';
 import { Icon } from '@/components/Icon';
 import { LinhaItem } from '@/components/Linha';
+import { Cab } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
 const ABAS = [['aulas', 'Aulas e apostilas'], ['cursos', 'Cursos gratuitos'], ['repertorio', 'Conhecimento de mundo']] as const;
@@ -18,7 +19,8 @@ export default async function Biblioteca({ searchParams }: { searchParams: Promi
   const rec = (recursos ?? []).filter(r => !sp.c || r.categoria === sp.c);
   return (
     <>
-      <div><h1 className="h1">Biblioteca</h1><p className="sub">Aulas, apostilas, cursos gratuitos e repertório para a redação.</p></div>
+      <Cab titulo="Biblioteca" sub="Aulas, apostilas, cursos gratuitos e repertório para a redação."
+        info={[['Aulas e apostilas', disciplinas.flatMap(d => d.itens.filter(i => i.tipo !== 'sim')).length], [aba === 'cursos' ? 'Cursos gratuitos' : aba === 'repertorio' ? 'Itens de repertório' : 'Disciplinas', aba === 'aulas' ? disciplinas.length : (recursos ?? []).length]]} />
       <div className="tabs" role="tablist">{ABAS.map(a => <Link key={a[0]} role="tab" className={aba === a[0] ? 'on' : ''} href={`?aba=${a[0]}`}>{a[1]}</Link>)}</div>
       {aba === 'aulas' ? (
         <>
@@ -30,10 +32,11 @@ export default async function Biblioteca({ searchParams }: { searchParams: Promi
       ) : (
         <>
           {cats.length > 1 && <div className="chips"><Link className={`chip${!sp.c ? ' on' : ''}`} href={`?aba=${aba}`}>Todas</Link>{cats.map(c => <Link key={c} className={`chip${sp.c === c ? ' on' : ''}`} href={q({ c })}>{c}</Link>)}</div>}
-          <div className="card">{rec.length ? <div className="list">{rec.map(r => (
-            <div key={r.id} className="li"><span className="ico"><Icon n="globe" /></span><div className="tx"><b>{r.titulo}</b><small>{[r.categoria, r.carga, r.descricao].filter(Boolean).join(' · ')}</small></div>
-              <a className="btn sm" href={r.url} target="_blank" rel="noreferrer">Acessar <Icon n="arrow" s={14} /></a></div>))}</div>
-            : <div className="empty">A equipe ainda não indicou itens aqui.</div>}</div>
+          {rec.length ? <div className="cg">{rec.map(r => (
+            <div key={r.id} className="sc"><div className="sc-top"><span className="sc-i"><Icon n="globe" s={20} /></span><span className="pill">{r.categoria}</span></div>
+              <b>{r.titulo}</b><span className="sc-m">{[r.carga, r.descricao].filter(Boolean).join(' · ') || 'Indicado pela equipe'}</span>
+              <a className="btn pri" href={r.url} target="_blank" rel="noreferrer">Acessar <Icon n="arrow" s={14} /></a></div>))}</div>
+            : <div className="card"><div className="empty">A equipe ainda não indicou itens aqui.</div></div>}
         </>
       )}
     </>

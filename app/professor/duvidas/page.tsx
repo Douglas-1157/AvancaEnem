@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { exigirPerfil } from '@/lib/sessao';
 import { Av } from '@/components/ui';
+import { Cab } from '@/components/Painel';
 import { Acao } from '@/components/Form';
 import { apagarSalva, responderDuvida } from '@/lib/acoes/equipe';
 import { Resposta } from './Resposta';
@@ -14,10 +15,15 @@ export default async function Duvidas({ searchParams }: { searchParams: Promise<
     db.from('duvidas').select('*,profiles!duvidas_aluno_id_fkey(nome)').eq('status', aba).order('created_at', { ascending: aba === 'pendente' }),
     db.from('respostas_salvas').select('id,texto').eq('professor_id', perfil.id),
   ]);
+  const [{ count: nPend }, { count: nResp }] = await Promise.all([
+    db.from('duvidas').select('id', { count: 'exact', head: true }).eq('status', 'pendente'),
+    db.from('duvidas').select('id', { count: 'exact', head: true }).eq('status', 'respondida'),
+  ]);
   const sel = (lista ?? []).find((d: any) => d.id === sp.id) ?? lista?.[0];
   return (
     <>
-      <div><h1 className="h1">Dúvidas</h1><p className="sub">Responda os alunos. Respostas que você repete podem ser salvas.</p></div>
+      <Cab titulo="Dúvidas" sub="Responda os alunos. Respostas que você repete podem ser salvas."
+        info={[['Sem resposta', nPend ?? 0], ['Respondidas', nResp ?? 0], ['Respostas salvas', salvas?.length ?? 0]]} />
       <div className="tabs" role="tablist"><Link className={aba === 'pendente' ? 'on' : ''} href="?">Pendentes</Link><Link className={aba === 'respondida' ? 'on' : ''} href="?aba=resp">Respondidas</Link></div>
       <div className="cols">
         <div className="card"><div className="list">{lista?.length ? lista.map((d: any) => (

@@ -120,7 +120,10 @@ export async function criarSimulado(_: Estado, fd: FormData): Promise<Estado> {
   if (!titulo) return no('Dê um título ao simulado.');
   if (!qs.length) return no('Selecione ao menos uma questão.');
   if (!turmas.length) return no('Escolha ao menos uma turma.');
-  const { data: s, error } = await db.from('simulados').insert({ titulo, minutos: num(fd, 'minutos', 30), disciplina_id: txt(fd, 'disciplina_id') || null, criado_por: e.id }).select('id').single();
+  // o professor informa o tempo POR QUESTÃO; o total do simulado é calculado (questões × tempo), entre 5 e 300 min
+  const porQuestao = Number(String(fd.get('tempo_questao') ?? '').replace(',', '.'));
+  const minutos = porQuestao > 0 ? Math.min(300, Math.max(5, Math.ceil(porQuestao * qs.length))) : num(fd, 'minutos', 30);
+  const { data: s, error } = await db.from('simulados').insert({ titulo, minutos, disciplina_id: txt(fd, 'disciplina_id') || null, criado_por: e.id }).select('id').single();
   if (error) return no(error.message);
   const prazo = txt(fd, 'prazo') || null;
   const r1 = await db.from('simulado_questoes').insert(qs.map((q, i) => ({ simulado_id: s.id, questao_id: q, ordem: i + 1 })));
@@ -130,7 +133,7 @@ export async function criarSimulado(_: Estado, fd: FormData): Promise<Estado> {
   const modulo = txt(fd, 'modulo_id');
   if (modulo) {
     const { count } = await db.from('itens').select('id', { count: 'exact', head: true }).eq('modulo_id', modulo);
-    const { data: it, error: e3 } = await db.from('itens').insert({ modulo_id: modulo, tipo: 'sim', titulo, minutos: num(fd, 'minutos', 30), simulado_id: s.id, ordem: (count ?? 0) + 1, criado_por: e.id }).select('id').single();
+    const { data: it, error: e3 } = await db.from('itens').insert({ modulo_id: modulo, tipo: 'sim', titulo, minutos, simulado_id: s.id, ordem: (count ?? 0) + 1, criado_por: e.id }).select('id').single();
     if (e3) return no(e3.message);
     await db.from('item_turmas').insert(turmas.map(t => ({ item_id: it.id, turma_id: t, prazo })));
   }

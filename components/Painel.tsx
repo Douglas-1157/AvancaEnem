@@ -34,3 +34,23 @@ export const Atalhos = ({ itens, titulo }: { itens: Atalho[]; titulo: string }) 
         <span className="rt-ic"><Icon n={r.ic} s={22} />{r.n ? <i className="rt-b">{r.n}</i> : null}</span><b>{r.t}</b><small>{r.d}</small>
       </Link>))}</div></section>
 );
+
+// Cabeçalho de página: título, subtítulo, números em destaque e uma ação opcional
+export function Cab({ titulo, sub, info, acao }: { titulo: string; sub?: string; info?: [string, ReactNode][]; acao?: ReactNode }) {
+  return (
+    <section className="cab">
+      <div className="cab-t"><div><h1 className="h1">{titulo}</h1>{sub && <p className="sub">{sub}</p>}</div>{acao}</div>
+      {info && info.length > 0 && <div className="info4">{info.map(([l, v]) => <div key={l}><small>{l}</small><b>{v}</b></div>)}</div>}
+    </section>
+  );
+}
+
+// Bloco de formulário/seção com ícone e título
+export function Bloco({ ic, titulo, sub, children, className = '' }: { ic: string; titulo: string; sub?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <div className={`card bloco ${className}`}>
+      <div className="fh"><span className="fh-i"><Icon n={ic} s={20} /></span><div><h2 className="h2">{titulo}</h2>{sub && <p className="sub">{sub}</p>}</div></div>
+      {children}
+    </div>
+  );
+}
