@@ -97,6 +97,20 @@ export async function criarRecurso(_: Estado, fd: FormData): Promise<Estado> {
 }
 export async function apagarRecurso(id: string) { const e = await equipe(); if (!e) return; await e.db.from('recursos').delete().eq('id', id); revalidatePath('/professor/conteudo'); }
 
+// Envia uma imagem de questão (enunciado ou comentário) para o bucket público "questoes".
+const TIPOS_IMG: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
+async function enviarImagem(db: any, fd: FormData, campo: string): Promise<{ url: string | null; erro?: string }> {
+  const file = fd.get(campo);
+  if (!(file instanceof File) || file.size === 0) return { url: null };
+  const ext = TIPOS_IMG[file.type];
+  if (!ext) return { url: null, erro: 'A imagem precisa ser PNG, JPG, WEBP ou GIF.' };
+  if (file.size > 4 * 1024 * 1024) return { url: null, erro: `Essa imagem tem ${(file.size / 1048576).toFixed(1)} MB e o limite é 4 MB. Reduza o tamanho e envie de novo.` };
+  const caminho = `${crypto.randomUUID()}.${ext}`;
+  const up = await db.storage.from('questoes').upload(caminho, file, { contentType: file.type });
+  if (up.error) return { url: null, erro: 'Falha ao enviar a imagem: ' + up.error.message };
+  return { url: db.storage.from('questoes').getPublicUrl(caminho).data.publicUrl };
+}
+
 // ---------- Questões e simulados ----------
 export async function criarQuestao(_: Estado, fd: FormData): Promise<Estado> {
   const e = await equipe(); if (!e) return no('Sem permissão.');
@@ -104,9 +118,12 @@ export async function criarQuestao(_: Estado, fd: FormData): Promise<Estado> {
   const correta = Number(fd.get('correta'));
   if (alts.length < 2) return no('Informe ao menos duas alternativas.');
   if (!(correta >= 0 && correta < alts.length)) return no('Marque a alternativa correta.');
+  const img = await enviarImagem(e.db, fd, 'imagem'); if (img.erro) return no(img.erro);
+  const imgC = await enviarImagem(e.db, fd, 'comentario_imagem'); if (imgC.erro) return no(imgC.erro);
   const { error } = await e.db.from('questoes').insert({
     disciplina_id: txt(fd, 'disciplina_id'), competencia_id: await resolverCompetencia(e.db, fd, txt(fd, 'disciplina_id')), enunciado: txt(fd, 'enunciado'),
     alternativas: alts, correta, comentario: txt(fd, 'comentario') || null, criado_por: e.id,
+    imagem_url: img.url, comentario_imagem_url: imgC.url,
   });
   if (error) return no(error.message);
   revalidatePath('/professor/banco'); return ok('Questão adicionada ao banco.');

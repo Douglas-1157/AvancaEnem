@@ -24,10 +24,10 @@ export default async function Duvidas({ searchParams }: { searchParams: Promise<
     <>
       <Cab titulo="Dúvidas" sub="Responda os alunos. Respostas que você repete podem ser salvas."
         info={[['Sem resposta', nPend ?? 0], ['Respondidas', nResp ?? 0], ['Respostas salvas', salvas?.length ?? 0]]} />
-      <div className="tabs" role="tablist"><Link className={aba === 'pendente' ? 'on' : ''} href="?">Pendentes</Link><Link className={aba === 'respondida' ? 'on' : ''} href="?aba=resp">Respondidas</Link></div>
+      <div className="tabs" role="tablist"><Link scroll={false} className={aba === 'pendente' ? 'on' : ''} href="?">Pendentes</Link><Link scroll={false} className={aba === 'respondida' ? 'on' : ''} href="?aba=resp">Respondidas</Link></div>
       <div className="cols">
         <div className="card"><div className="list">{lista?.length ? lista.map((d: any) => (
-          <Link key={d.id} href={`?aba=${aba === 'respondida' ? 'resp' : 'pend'}&id=${d.id}`} className="li" style={sel?.id === d.id ? { background: 'var(--accent-soft)' } : undefined}>
+          <Link scroll={false} key={d.id} href={`?aba=${aba === 'respondida' ? 'resp' : 'pend'}&id=${d.id}`} className="li" style={sel?.id === d.id ? { background: 'var(--accent-soft)' } : undefined}>
             <Av nome={d.profiles?.nome ?? '?'} sm /><div className="tx"><b>{d.profiles?.nome}</b><small>{d.contexto ?? 'Sem vínculo'}</small><small className="trunc">{d.mensagem}</small></div></Link>)) : <div className="empty">{aba === 'pendente' ? 'Nenhuma dúvida pendente. 🎉' : 'Nenhuma resposta ainda.'}</div>}</div></div>
         {sel && (
           <div className="card" key={sel.id}>

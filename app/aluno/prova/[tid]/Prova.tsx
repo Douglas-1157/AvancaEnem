@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/Icon';
 import { responderQuestao, finalizarSimulado } from '@/lib/acoes/aluno';
 
-type Q = { id: string; enunciado: string; alternativas: string[]; competencia: string | null; marcada: number | null };
+type Q = { id: string; enunciado: string; alternativas: string[]; competencia: string | null; marcada: number | null; imagem: string | null };
 const L = 'ABCDEF';
 const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
@@ -70,6 +70,7 @@ export function Prova({ tentativa, titulo, restante, questoes }: { tentativa: st
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="row sb"><span className="sub num">Questão {i + 1} de {questoes.length}</span>{q.competencia && <span className="pill">{q.competencia}</span>}</div>
             <p style={{ fontSize: 17, textWrap: 'pretty', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>{q.enunciado}</p>
+            {q.imagem && <img className="qimg" src={q.imagem} alt="Imagem da questão" />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {q.alternativas.map((o, k) => <button key={k} className={`alt${resp[i] === k ? ' sel' : ''}`} onClick={() => marcar(k)}><span className="lt">{L[k]}</span><span>{o}</span></button>)}
             </div>

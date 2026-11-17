@@ -25,7 +25,7 @@ export default async function Redacoes({ searchParams }: { searchParams: Promise
     <>
       <Cab titulo="Redações" sub="Corrija com as 5 competências do ENEM (0 a 200 cada) e deixe um comentário."
         info={[['Para corrigir', nEnv ?? 0], ['Corrigidas', corr?.length ?? 0], ['Média das notas', mediaNota === null ? '—' : mediaNota], ['Temas publicados', temas?.length ?? 0]]} />
-      <div className="tabs" role="tablist"><Link className={aba === 'enviada' ? 'on' : ''} href="?">Para corrigir</Link><Link className={aba === 'corrigida' ? 'on' : ''} href="?aba=corrigidas">Corrigidas</Link></div>
+      <div className="tabs" role="tablist"><Link scroll={false} className={aba === 'enviada' ? 'on' : ''} href="?">Para corrigir</Link><Link scroll={false} className={aba === 'corrigida' ? 'on' : ''} href="?aba=corrigidas">Corrigidas</Link></div>
       <div className="cols">
         <div className="card"><div className="list">{reds?.length ? reds.map((r: any) => (
           <Link key={r.id} href={`/professor/redacoes/${r.id}`} className="li"><Av nome={r.profiles?.nome ?? '?'} sm /><div className="tx"><b>{r.profiles?.nome}</b><small>{r.redacao_temas?.titulo} · {new Date(r.enviada_em ?? r.corrigida_em).toLocaleDateString('pt-BR')}</small></div>{aba === 'corrigida' ? <b className="mono">{r.nota}</b> : <span className="btn sm pri">Corrigir</span>}</Link>))

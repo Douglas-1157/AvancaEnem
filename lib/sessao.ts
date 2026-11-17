@@ -6,7 +6,11 @@ import type { Papel, Perfil } from './tipos';
 // Autenticação e perfil são buscados uma única vez por requisição (layout e página compartilham o resultado).
 const carregar = cache(async () => {
   const db = await supabaseServer();
-  const { data: { user } } = await db.auth.getUser();
+  // getClaims valida o token localmente (sem ida ao servidor de Auth) quando o projeto usa chaves assimétricas;
+  // caso contrário o próprio SDK confirma com o Auth. Evita uma espera extra em cada troca de tela.
+  const { data } = await db.auth.getClaims();
+  const c = data?.claims as { sub?: string; app_metadata?: { trocar_senha?: boolean } } | undefined;
+  const user = c?.sub ? { id: c.sub, app_metadata: c.app_metadata ?? {} } : null;
   if (!user) return { db, user: null, perfil: null };
   const { data: perfil } = await db.from('profiles').select('*').eq('id', user.id).single<Perfil>();
   return { db, user, perfil };

@@ -14,7 +14,8 @@ export async function middleware(req: NextRequest) {
       },
     },
   });
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: claims } = await supabase.auth.getClaims();
+  const user = claims?.claims?.sub ? claims.claims : null;
   const p = req.nextUrl.pathname;
   const privado = /^\/(aluno|professor|gestao|painel)(\/|$)/.test(p);
   if (!user && privado) {

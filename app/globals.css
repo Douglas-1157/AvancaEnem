@@ -917,3 +917,16 @@ a.li{border-radius:12px}
 .tcard-h b{font:700 17px var(--display);display:block}
 .tcard-h small{color:var(--mute);font-size:13px}
 .tcard p{margin:0;color:var(--mute);font-size:13px}
+
+/* Imagens dentro das questões */
+.qimg{display:block;max-width:100%;max-height:420px;height:auto;margin:4px auto 0;border-radius:12px;border:1px solid var(--line);background:#fff;object-fit:contain}
+.note .qimg{margin-top:10px}
+
+/* Esqueleto de carregamento */
+.sk-wrap{display:flex;flex-direction:column;gap:16px}
+.sk{border-radius:18px;background:linear-gradient(90deg,var(--line) 0,var(--panel) 50%,var(--line) 100%);background-size:200% 100%;animation:skm 1.2s ease-in-out infinite;opacity:.7}
+.sk-h{height:150px}.sk-b{height:120px}.sk-c{height:100px;flex:1}
+.sk-row{display:flex;gap:16px}
+@keyframes skm{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+@media (max-width:820px){.sk-row{flex-direction:column}}

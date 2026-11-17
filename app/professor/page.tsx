@@ -47,8 +47,8 @@ export default async function PainelTurmas({ searchParams }: { searchParams: Pro
         <div className="stack">
           <div className="card">
             <div className="row sb"><h2 className="h2">Alunos</h2><span className="sub" style={{ fontSize: 13 }}>{vis.length} de {lista.length}</span></div>
-            <div className="tabs" role="tablist" style={{ marginTop: 10 }}><Link className={!sp.turma ? 'on' : ''} href="/professor">Todas as turmas</Link>{turmas?.map(t => <Link key={t.id} className={sp.turma === t.id ? 'on' : ''} href={`?turma=${t.id}`}>{t.nome}</Link>)}</div>
-            <div className="tabs" role="tablist" style={{ marginTop: 8 }}>{[['', 'Todos', lista.length], ['bad', 'Em risco', cont('bad')], ['warn', 'Atenção', cont('warn')], ['ok', 'No ritmo', cont('ok')]].map(([k, l, n]) => <Link key={k as string} className={(sp.f ?? '') === k ? 'on' : ''} href={k ? q({ f: k as string }) : q({})}>{l} · {n}</Link>)}</div>
+            <div className="tabs" role="tablist" style={{ marginTop: 10 }}><Link scroll={false} className={!sp.turma ? 'on' : ''} href="/professor">Todas as turmas</Link>{turmas?.map(t => <Link scroll={false} key={t.id} className={sp.turma === t.id ? 'on' : ''} href={`?turma=${t.id}`}>{t.nome}</Link>)}</div>
+            <div className="tabs" role="tablist" style={{ marginTop: 8 }}>{[['', 'Todos', lista.length], ['bad', 'Em risco', cont('bad')], ['warn', 'Atenção', cont('warn')], ['ok', 'No ritmo', cont('ok')]].map(([k, l, n]) => <Link scroll={false} key={k as string} className={(sp.f ?? '') === k ? 'on' : ''} href={k ? q({ f: k as string }) : q({})}>{l} · {n}</Link>)}</div>
             <div className="list" style={{ marginTop: 6 }}>{vis.length ? vis.map(a => (
               <Link key={a.id} href={`/professor/aluno/${a.id}`} className="li"><Av nome={a.nome} sm /><div className="tx"><b>{a.nome}</b><small>{a.r.motivo} · {fmtMin(a.min_semana)} na semana{a.media != null ? ` · média ${a.media}` : ''}</small></div>
                 <div style={{ width: 90 }}><Pb p={(a.min_semana / a.meta_semanal_min) * 100} cls={a.r.nivel === 'ok' ? 'ok' : ''} /></div><span className={`pill ${a.r.nivel}`}>{a.r.rotulo}</span></Link>))

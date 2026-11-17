@@ -43,7 +43,7 @@ export default async function Trilhas({ searchParams }: { searchParams: Promise<
         info={[['Disciplinas', disciplinas.length], ['Etapas concluídas', `${todosFeitos} de ${todos.length}`], ['Progresso geral', `${todos.length ? Math.round((todosFeitos / todos.length) * 100) : 0}%`], ['Em andamento', emAndamento]]} />
       <div className="dsel" role="tablist">
         {disciplinas.map((x, i) => { const n = x.itens.filter(i2 => i2.concluido).length, p = x.itens.length ? Math.round((n / x.itens.length) * 100) : 0; return (
-          <Link key={x.id} role="tab" aria-selected={x.id === d.id} className={`dc${x.id === d.id ? ' on' : ''}`} href={`/aluno/trilhas?d=${x.id}`}>
+          <Link scroll={false} key={x.id} role="tab" aria-selected={x.id === d.id} className={`dc${x.id === d.id ? ' on' : ''}`} href={`/aluno/trilhas?d=${x.id}`}>
             <span className={`dl-av ${['c1', 'c5', 'c3', 'c4', 'c2'][i % 5]}`}>{x.nome[0]}</span><b>{x.nome}</b><small>{n} de {x.itens.length} etapas</small><Pb p={p} cls={p >= 100 ? 'ok' : ''} />
           </Link>
         ); })}

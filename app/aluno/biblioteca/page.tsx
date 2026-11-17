@@ -21,17 +21,17 @@ export default async function Biblioteca({ searchParams }: { searchParams: Promi
     <>
       <Cab titulo="Biblioteca" sub="Aulas, apostilas, cursos gratuitos e repertório para a redação."
         info={[['Aulas e apostilas', disciplinas.flatMap(d => d.itens.filter(i => i.tipo !== 'sim')).length], [aba === 'cursos' ? 'Cursos gratuitos' : aba === 'repertorio' ? 'Itens de repertório' : 'Disciplinas', aba === 'aulas' ? disciplinas.length : (recursos ?? []).length]]} />
-      <div className="tabs" role="tablist">{ABAS.map(a => <Link key={a[0]} role="tab" className={aba === a[0] ? 'on' : ''} href={`?aba=${a[0]}`}>{a[1]}</Link>)}</div>
+      <div className="tabs" role="tablist">{ABAS.map(a => <Link scroll={false} key={a[0]} role="tab" className={aba === a[0] ? 'on' : ''} href={`?aba=${a[0]}`}>{a[1]}</Link>)}</div>
       {aba === 'aulas' ? (
         <>
-          <div className="chips"><Link className={`chip${!sp.d ? ' on' : ''}`} href="?aba=aulas">Todas</Link>{disciplinas.map(d => <Link key={d.id} className={`chip${sp.d === d.nome ? ' on' : ''}`} href={q({ d: d.nome })}>{d.nome}</Link>)}</div>
+          <div className="chips"><Link scroll={false} className={`chip${!sp.d ? ' on' : ''}`} href="?aba=aulas">Todas</Link>{disciplinas.map(d => <Link scroll={false} key={d.id} className={`chip${sp.d === d.nome ? ' on' : ''}`} href={q({ d: d.nome })}>{d.nome}</Link>)}</div>
           <div className="card">{disc.some(d => d.itens.some(i => i.tipo !== 'sim'))
             ? <div className="list">{disc.flatMap(d => d.itens.filter(i => i.tipo !== 'sim').map(i => <LinhaItem key={i.id} it={i} disc={d} quieto />))}</div>
             : <div className="empty">Nenhuma aula publicada para a sua turma ainda.</div>}</div>
         </>
       ) : (
         <>
-          {cats.length > 1 && <div className="chips"><Link className={`chip${!sp.c ? ' on' : ''}`} href={`?aba=${aba}`}>Todas</Link>{cats.map(c => <Link key={c} className={`chip${sp.c === c ? ' on' : ''}`} href={q({ c })}>{c}</Link>)}</div>}
+          {cats.length > 1 && <div className="chips"><Link scroll={false} className={`chip${!sp.c ? ' on' : ''}`} href={`?aba=${aba}`}>Todas</Link>{cats.map(c => <Link scroll={false} key={c} className={`chip${sp.c === c ? ' on' : ''}`} href={q({ c })}>{c}</Link>)}</div>}
           {rec.length ? <div className="cg">{rec.map(r => (
             <div key={r.id} className="sc"><div className="sc-top"><span className="sc-i"><Icon n="globe" s={20} /></span><span className="pill">{r.categoria}</span></div>
               <b>{r.titulo}</b><span className="sc-m">{[r.carga, r.descricao].filter(Boolean).join(' · ') || 'Indicado pela equipe'}</span>
