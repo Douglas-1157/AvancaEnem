@@ -130,6 +130,58 @@ export async function criarQuestao(_: Estado, fd: FormData): Promise<Estado> {
 }
 export async function apagarQuestao(id: string) { const e = await equipe(); if (!e) return; await e.db.from('questoes').delete().eq('id', id); revalidatePath('/professor/banco'); }
 
+// Edita uma questão. Imagem: nova substitui, "remover" apaga, sem nada mantém a atual.
+export async function editarQuestao(_: Estado, fd: FormData): Promise<Estado> {
+  const e = await equipe(); if (!e) return no('Sem permissão.');
+  const id = txt(fd, 'id'); if (!id) return no('Questão não encontrada.');
+  const alts = [0, 1, 2, 3, 4].map(i => txt(fd, `alt${i}`)).filter(Boolean);
+  const correta = Number(fd.get('correta'));
+  if (alts.length < 2) return no('Informe ao menos duas alternativas.');
+  if (!(correta >= 0 && correta < alts.length)) return no('Marque a alternativa correta.');
+  const upd: Record<string, unknown> = {
+    disciplina_id: txt(fd, 'disciplina_id'), competencia_id: await resolverCompetencia(e.db, fd, txt(fd, 'disciplina_id')),
+    enunciado: txt(fd, 'enunciado'), alternativas: alts, correta, comentario: txt(fd, 'comentario') || null,
+  };
+  for (const [campo, coluna] of [['imagem', 'imagem_url'], ['comentario_imagem', 'comentario_imagem_url']] as const) {
+    const img = await enviarImagem(e.db, fd, campo); if (img.erro) return no(img.erro);
+    if (img.url) upd[coluna] = img.url; else if (txt(fd, `remover_${campo}`) === '1') upd[coluna] = null;
+  }
+  const { error } = await e.db.from('questoes').update(upd).eq('id', id);
+  if (error) return no(error.message);
+  revalidatePath('/professor/banco'); return ok('Questão atualizada.');
+}
+export async function arquivarQuestao(id: string, arquivada: boolean) {
+  const e = await equipe(); if (!e) return;
+  await e.db.from('questoes').update({ arquivada }).eq('id', id);
+  revalidatePath('/professor/banco');
+}
+
+// Sobe ou desce um item dentro do módulo (a ordem da trilha dos alunos).
+export async function moverItem(itemId: string, dir: 'up' | 'down') {
+  const e = await equipe(); if (!e) return;
+  const { data: it } = await e.db.from('itens').select('id,modulo_id').eq('id', itemId).maybeSingle();
+  if (!it) return;
+  const { data: irmaos } = await e.db.from('itens').select('id').eq('modulo_id', it.modulo_id).order('ordem').order('created_at');
+  const ids = (irmaos ?? []).map((x: any) => x.id as string);
+  const i = ids.indexOf(itemId), j = dir === 'up' ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= ids.length) return;
+  [ids[i], ids[j]] = [ids[j], ids[i]];
+  await Promise.all(ids.map((id, k) => e.db.from('itens').update({ ordem: k + 1 }).eq('id', id)));
+  revalidatePath('/professor/conteudo'); revalidatePath('/aluno', 'layout');
+}
+
+// Gestão define uma nova senha provisória para alguém; a pessoa cria a própria no próximo acesso.
+export async function redefinirSenhaUsuario(_: Estado, fd: FormData): Promise<Estado> {
+  const e = await gestao(); if (!e) return no('Apenas a gestão redefine senhas.');
+  const alvo = txt(fd, 'usuario'), senha = String(fd.get('senha') ?? '');
+  if (!alvo) return no('Escolha a pessoa.');
+  if (senha.length < 8) return no('A senha provisória precisa ter 8 ou mais caracteres.');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return no('Falta configurar SUPABASE_SERVICE_ROLE_KEY no servidor.');
+  const { error } = await supabaseAdmin().auth.admin.updateUserById(alvo, { password: senha, app_metadata: { trocar_senha: true } });
+  if (error) return no('Não foi possível redefinir a senha. Tente de novo.');
+  return ok('Senha redefinida. Passe a senha provisória à pessoa: ela vai criar a própria ao entrar.');
+}
+
 export async function criarSimulado(_: Estado, fd: FormData): Promise<Estado> {
   const e = await equipe(); if (!e) return no('Sem permissão.');
   const { db } = e;

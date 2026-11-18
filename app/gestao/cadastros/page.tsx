@@ -1,7 +1,7 @@
 import { exigirPerfil } from '@/lib/sessao';
 import { Av } from '@/components/ui';
 import { Acao, Form } from '@/components/Form';
-import { criarProfessor, decidirCadastro, definirTurmasProfessor, importarAlunos } from '@/lib/acoes/equipe';
+import { criarProfessor, decidirCadastro, definirTurmasProfessor, importarAlunos, redefinirSenhaUsuario } from '@/lib/acoes/equipe';
 import { Cab, Bloco } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
@@ -9,10 +9,11 @@ export const maxDuration = 60;
 
 export default async function Cadastros() {
   const { db } = await exigirPerfil('gestao');
-  const [{ data: pend }, { data: recusados }, { data: profs }, { data: turmas }, { data: vinc }, { data: discs }, { count: nAlunos }] = await Promise.all([
+  const [{ data: pend }, { data: recusados }, { data: profs }, { data: pessoas }, { data: turmas }, { data: vinc }, { data: discs }, { count: nAlunos }] = await Promise.all([
     db.from('profiles').select('id,nome,matricula,created_at,turmas!profiles_turma_id_fkey(nome)').eq('status', 'pendente').order('created_at'),
     db.from('profiles').select('id,nome,turmas!profiles_turma_id_fkey(nome)').eq('status', 'recusado').order('created_at', { ascending: false }).limit(10),
     db.from('profiles').select('id,nome,disciplina_id').eq('papel', 'professor').eq('status', 'ativo').order('nome'),
+    db.from('profiles').select('id,nome,papel,turmas!profiles_turma_id_fkey(nome)').eq('status', 'ativo').order('nome').limit(2000),
     db.from('turmas').select('id,nome').order('nome'),
     db.from('professor_turmas').select('professor_id,turma_id'),
     db.from('disciplinas').select('id,nome').order('ordem'),
@@ -39,6 +40,12 @@ export default async function Cadastros() {
             <div className="field full"><label htmlFor="pd">Disciplina que leciona</label><select id="pd" name="disciplina_id" className="inp" defaultValue=""><option value="">Não informar</option>{discs?.map((d: any) => <option key={d.id} value={d.id}>{d.nome}</option>)}</select></div>
             <div className="field full"><label htmlFor="ps">Senha provisória (8+ caracteres)</label><input id="ps" name="senha" type="text" minLength={8} className="inp" required autoComplete="off" /></div>
             <label className="full sub" style={{ fontSize: 14 }}><input type="checkbox" name="gestao" style={{ marginRight: 8 }} />Também é da gestão da escola</label>
+          </Form></Bloco>
+        <Bloco ic="lock" titulo="Redefinir senha de alguém" sub="Para quem perdeu o acesso. Defina uma senha provisória e passe à pessoa: ao entrar, ela cria a própria senha.">
+          <Form action={redefinirSenhaUsuario} botao="Redefinir senha">
+            <div className="field full"><label htmlFor="ru">Pessoa</label><select id="ru" name="usuario" className="inp" required defaultValue=""><option value="" disabled>Escolha</option>
+              {(['aluno', 'professor', 'gestao'] as const).map(pp => <optgroup key={pp} label={pp === 'aluno' ? 'Alunos' : pp === 'professor' ? 'Professores' : 'Gestão'}>{(pessoas ?? []).filter((x: any) => x.papel === pp).map((x: any) => <option key={x.id} value={x.id}>{x.nome}{x.turmas?.nome ? ` · ${x.turmas.nome}` : ''}</option>)}</optgroup>)}</select></div>
+            <div className="field full"><label htmlFor="rs">Senha provisória (8+ caracteres)</label><input id="rs" name="senha" type="text" minLength={8} className="inp" required autoComplete="off" /></div>
           </Form></Bloco>
         <Bloco ic="file" titulo="Importar alunos por planilha" sub={<>No Excel ou Google Planilhas, deixe as colunas <b>nome, email, matricula, turma</b> (matrícula e turma são opcionais; a turma precisa já existir) e salve como CSV. Todos entram já aprovados, com a senha provisória abaixo.</>}>
           <Form action={importarAlunos} botao="Importar">

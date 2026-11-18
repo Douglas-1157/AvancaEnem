@@ -27,7 +27,6 @@ export function EntrarForm({ turmas, inicial }: { turmas: Turma[]; inicial: 'ent
     }
     const res = await cadastrarAluno({
   nome: String(f.get('nome')),
-  matricula: String(f.get('matricula')),
   turma: String(f.get('turma')),
   email,
   senha,
@@ -54,8 +53,7 @@ setEnviado(true);
             <form className="form" onSubmit={enviar} style={modo === 'entrar' ? { gridTemplateColumns: '1fr' } : undefined}>
               {modo === 'criar' && <>
                 <div className="field full"><label htmlFor="nome">Nome completo</label><input className="inp" id="nome" name="nome" required minLength={3} autoComplete="name" /></div>
-                <div className="field"><label htmlFor="matricula">Matrícula</label><input className="inp" id="matricula" name="matricula" required /></div>
-                <div className="field"><label htmlFor="turma">Turma</label>
+                <div className="field full"><label htmlFor="turma">Turma</label>
                   <select className="inp" id="turma" name="turma" required defaultValue="">
                     <option value="" disabled>Escolha</option>{turmas.map(t => <option key={t.id} value={t.id}>{t.nome}{t.turno ? ` · ${t.turno}` : ''}</option>)}
                   </select></div>

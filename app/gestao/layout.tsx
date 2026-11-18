@@ -10,5 +10,5 @@ export default async function GestaoLayout({ children }: { children: React.React
     db.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pendente'),
   ]);
   const { menu, extra } = menuDe('gestao', { duvidas: d.count ?? 0, redacoes: r.count ?? 0, cadastros: c.count ?? 0 });
-  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel="Gestão">{children}</Shell>;
+  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel="Gestão" foto={perfil.avatar_url}>{children}</Shell>;
 }
