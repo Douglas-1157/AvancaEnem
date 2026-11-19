@@ -6,7 +6,10 @@ import { LinhaItem } from '@/components/Linha';
 import { Cab } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
-const ABAS = [['aulas', 'Aulas e apostilas'], ['cursos', 'Cursos gratuitos'], ['repertorio', 'Conhecimento de mundo']] as const;
+const ABAS = [['aulas', 'Aulas e apostilas'], ['cursos', 'Cursos gratuitos'], ['repertorio', 'Conhecimento de mundo'], ['provas', 'Provas do ENEM']] as const;
+const ANOS = [2025, 2024, 2023, 2022, 2021, 2020];
+const OFICIAL = 'https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos';
+const DIAS = [['1', '1º dia', 'Linguagens, Humanas e Redação'], ['2', '2º dia', 'Natureza e Matemática']] as const;
 
 export default async function Biblioteca({ searchParams }: { searchParams: Promise<{ aba?: string; d?: string; c?: string }> }) {
   const sp = await searchParams; const aba = ABAS.find(a => a[0] === sp.aba)?.[0] ?? 'aulas';
@@ -19,7 +22,7 @@ export default async function Biblioteca({ searchParams }: { searchParams: Promi
   const rec = (recursos ?? []).filter(r => !sp.c || r.categoria === sp.c);
   return (
     <>
-      <Cab titulo="Biblioteca" sub="Aulas, apostilas, cursos gratuitos e repertório para a redação."
+      <Cab titulo="Biblioteca" sub="Aulas, apostilas, cursos, repertório e provas anteriores do ENEM."
         info={[['Aulas e apostilas', disciplinas.flatMap(d => d.itens.filter(i => i.tipo !== 'sim')).length], [aba === 'cursos' ? 'Cursos gratuitos' : aba === 'repertorio' ? 'Itens de repertório' : 'Disciplinas', aba === 'aulas' ? disciplinas.length : (recursos ?? []).length]]} />
       <div className="tabs" role="tablist">{ABAS.map(a => <Link scroll={false} key={a[0]} role="tab" className={aba === a[0] ? 'on' : ''} href={`?aba=${a[0]}`}>{a[1]}</Link>)}</div>
       {aba === 'aulas' ? (
@@ -28,6 +31,22 @@ export default async function Biblioteca({ searchParams }: { searchParams: Promi
           <div className="card">{disc.some(d => d.itens.some(i => i.tipo !== 'sim'))
             ? <div className="list">{disc.flatMap(d => d.itens.filter(i => i.tipo !== 'sim').map(i => <LinhaItem key={i.id} it={i} disc={d} quieto />))}</div>
             : <div className="empty">Nenhuma aula publicada para a sua turma ainda.</div>}</div>
+        </>
+      ) : aba === 'provas' ? (
+        <>
+          <div className="cg">{ANOS.map(ano => (
+            <div key={ano} className="sc"><div className="sc-top"><span className="sc-i"><Icon n="exam" s={20} /></span><span className="pill">{ano}</span></div>
+              <b>ENEM {ano}</b>
+              {DIAS.map(([d, t, area]) => (
+                <div key={d} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span className="sc-m"><b>{t}</b> · {area}</span>
+                  <div className="row" style={{ gap: 8 }}>
+                    <a className="btn sm pri" href={`/api/enem?ano=${ano}&dia=${d}&tipo=prova`} download><Icon n="file" s={14} /> Prova</a>
+                    <a className="btn sm" href={`/api/enem?ano=${ano}&dia=${d}&tipo=gabarito`} download><Icon n="check" s={14} /> Gabarito</a>
+                  </div>
+                </div>))}
+            </div>))}</div>
+          <p className="sub" style={{ fontSize: 13 }}>Arquivos oficiais do Inep (caderno azul). Se algum download não abrir, escolha o caderno direto na <a className="lnk" href={OFICIAL} target="_blank" rel="noreferrer">página oficial do Inep</a>.</p>
         </>
       ) : (
         <>

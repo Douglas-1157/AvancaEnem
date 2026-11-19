@@ -940,8 +940,15 @@ a.li{border-radius:12px}
 .img-ok img{width:96px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:#fff;flex:none}
 .img-ac{display:flex;flex-direction:column;gap:8px;min-width:0}
 @media (max-width:520px){.img-ok{flex-direction:column;align-items:flex-start}.img-ok img{width:100%;height:150px}}
-.av{overflow:hidden}.av img{width:100%;height:100%;object-fit:cover;display:block}
 .pv-banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .ord{display:inline-flex;flex-direction:column;gap:2px;flex:none}
 .ord-b{width:28px;height:22px;padding:0;display:inline-grid;place-items:center;font-size:10px;line-height:1}
 span.ord-b{visibility:hidden}
+
+/* Linhas com várias ações (trilha do professor, banco de questões): o texto nunca fica espremido */
+.li-item{flex-wrap:wrap;row-gap:10px}
+.li-item .tx{flex:1 1 200px}
+.li-acoes{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+@media (max-width:820px){.li-item .tx{flex-basis:calc(100% - 120px)}.li-acoes{width:100%;margin-left:0;padding-left:0}}
+.edit-t{margin-top:10px}.edit-t summary{list-style:none;display:inline-flex;cursor:pointer}.edit-t summary::-webkit-details-marker{display:none}
+.edit-t[open] summary{margin-bottom:10px}

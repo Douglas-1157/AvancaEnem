@@ -10,5 +10,5 @@ export default async function AlunoLayout({ children }: { children: React.ReactN
     (await supabaseServer()).from('duvidas').select('id', { count: 'exact', head: true }).eq('status', 'respondida').is('visto_em', null),
   ]);
   const { menu, extra } = menuDe('aluno', { duvidas: count ?? 0, redacoes: 0, cadastros: 0 });
-  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel="Aluno" foto={perfil.avatar_url}>{children}</Shell>;
+  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel="Aluno">{children}</Shell>;
 }

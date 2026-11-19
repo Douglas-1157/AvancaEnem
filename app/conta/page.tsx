@@ -2,8 +2,7 @@ import { exigirPerfil } from '@/lib/sessao';
 import { Form } from '@/components/Form';
 import { CampoSenha } from '@/components/CampoSenha';
 import { Cab } from '@/components/Painel';
-import { CampoImagem } from '@/components/CampoImagem';
-import { trocarEmailConta, trocarSenhaConta, salvarNomeConta, salvarFotoConta } from '@/lib/acoes/senha';
+import { trocarEmailConta, trocarSenhaConta, salvarNomeConta } from '@/lib/acoes/senha';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,13 +19,9 @@ export default async function Conta() {
         <div className="stack">
           <div className="card">
             <h2 className="h2">Seu perfil</h2>
-            <p className="sub" style={{ margin: '4px 0 12px' }}>O nome e a foto aparecem para a escola na plataforma.</p>
+            <p className="sub" style={{ margin: '4px 0 12px' }}>O nome aparece para a escola na plataforma.</p>
             <Form action={salvarNomeConta} botao="Salvar nome">
               <div className="field full"><label htmlFor="nm">Nome completo</label><input id="nm" name="nome" className="inp" required minLength={3} maxLength={120} defaultValue={perfil.nome} autoComplete="name" /></div>
-            </Form>
-            <div style={{ height: 16 }} />
-            <Form action={salvarFotoConta} botao="Salvar foto">
-              <CampoImagem id="ft" name="foto" label="Foto de perfil" atual={perfil.avatar_url} max={2} dica="PNG, JPG ou WEBP, até 2 MB. Aparece no canto superior direito." />
             </Form>
           </div>
           <div className="card">

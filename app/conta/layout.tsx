@@ -7,5 +7,5 @@ export default async function ContaLayout({ children }: { children: React.ReactN
   const { perfil } = await exigirPerfil();
   const { menu, extra } = menuDe(perfil.papel);
   const papel = perfil.papel === 'aluno' ? 'Aluno' : perfil.papel === 'gestao' ? 'Gestão' : 'Professor';
-  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel={papel} foto={perfil.avatar_url}>{children}</Shell>;
+  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel={papel}>{children}</Shell>;
 }

@@ -15,5 +15,5 @@ export default async function ProfessorLayout({ children }: { children: React.Re
     perfil.disciplina_id ? db.from('disciplinas').select('nome').eq('id', perfil.disciplina_id).maybeSingle().then(r => (r.data as any)?.nome as string | undefined) : Promise.resolve(undefined),
   ]);
   const { menu, extra } = menuDe(perfil.papel, { duvidas, redacoes, cadastros });
-  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel={(perfil.papel === 'gestao' ? 'Gestão' : 'Professor') + (disc ? ` · ${disc}` : '')} foto={perfil.avatar_url}>{children}</Shell>;
+  return <Shell menu={menu} extra={extra} nome={perfil.nome} papel={(perfil.papel === 'gestao' ? 'Gestão' : 'Professor') + (disc ? ` · ${disc}` : '')}>{children}</Shell>;
 }

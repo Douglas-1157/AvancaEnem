@@ -128,6 +128,13 @@ export async function criarQuestao(_: Estado, fd: FormData): Promise<Estado> {
   if (error) return no(error.message);
   revalidatePath('/professor/banco'); return ok('Questão adicionada ao banco.');
 }
+// Exclui de vez. Se a questão já foi usada em simulado (ou respondida), o banco impede: nesse caso, arquive.
+export async function excluirQuestao(id: string): Promise<Estado> {
+  const e = await equipe(); if (!e) return no('Sem permissão.');
+  const { error } = await e.db.from('questoes').delete().eq('id', id);
+  if (error) return no(error.code === '23503' ? 'Esta questão já está em um simulado e não pode ser excluída. Use Arquivar.' : 'Não foi possível excluir.');
+  revalidatePath('/professor/banco'); return ok('Questão excluída.');
+}
 export async function apagarQuestao(id: string) { const e = await equipe(); if (!e) return; await e.db.from('questoes').delete().eq('id', id); revalidatePath('/professor/banco'); }
 
 // Edita uma questão. Imagem: nova substitui, "remover" apaga, sem nada mantém a atual.
@@ -264,6 +271,21 @@ export async function alternarTrava(turmaId: string, ligada: boolean) {
   await e.db.from('turmas').update({ trava_progressiva: ligada }).eq('id', turmaId);
   revalidatePath('/gestao', 'layout'); revalidatePath('/aluno', 'layout');
 }
+export async function editarTurma(_: Estado, fd: FormData): Promise<Estado> {
+  const e = await gestao(); if (!e) return no('Sem permissão.');
+  const id = txt(fd, 'id'), nome = txt(fd, 'nome');
+  if (!id || !nome) return no('Informe o nome da turma.');
+  const { error } = await e.db.from('turmas').update({ nome, turno: txt(fd, 'turno') || null }).eq('id', id);
+  if (error) return no(error.message.includes('duplicate') || error.code === '23505' ? 'Já existe uma turma com esse nome.' : 'Não foi possível salvar.');
+  revalidatePath('/gestao', 'layout'); revalidatePath('/aluno', 'layout'); return ok('Turma atualizada.');
+}
+// Excluir a turma NÃO apaga os alunos: eles ficam "sem turma". Os vínculos de publicação (aulas, simulados, redações) da turma saem.
+export async function excluirTurma(id: string): Promise<Estado> {
+  const e = await gestao(); if (!e) return no('Sem permissão.');
+  const { error } = await e.db.from('turmas').delete().eq('id', id);
+  if (error) return no('Não foi possível excluir a turma.');
+  revalidatePath('/gestao', 'layout'); revalidatePath('/professor', 'layout'); revalidatePath('/aluno', 'layout'); return ok('Turma excluída.');
+}
 export async function moverAluno(_: Estado, fd: FormData): Promise<Estado> {
   const e = await gestao(); if (!e) return no('Sem permissão.');
   const { error } = await e.db.from('profiles').update({ turma_id: txt(fd, 'turma_id') || null }).eq('id', txt(fd, 'id'));
@@ -311,12 +333,18 @@ function campos(linha: string, sep: string): string[] {
   out.push(atual.trim()); return out;
 }
 
+// Senha provisória aleatória (sem letras parecidas como 0/O e l/1), única para cada pessoa.
+function senhaProvisoria(n = 10): string {
+  const al = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const b = crypto.getRandomValues(new Uint32Array(n));
+  return Array.from(b, x => al[x % al.length]).join('');
+}
+
 // Importa alunos de uma planilha salva como CSV (colunas: nome, email, matricula, turma).
 export async function importarAlunos(_: Estado, fd: FormData): Promise<Estado> {
   const e = await gestao(); if (!e) return no('Apenas a gestão importa alunos.');
-  const arq = fd.get('arquivo'); const senha = String(fd.get('senha') ?? '');
+  const arq = fd.get('arquivo');
   if (!(arq instanceof File) || !arq.size) return no('Escolha o arquivo CSV.');
-  if (senha.length < 8) return no('Defina uma senha provisória de 8+ caracteres.');
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return no('Falta configurar SUPABASE_SERVICE_ROLE_KEY no servidor.');
   const bytes = new Uint8Array(await arq.arrayBuffer());
   let texto = new TextDecoder('utf-8').decode(bytes);
@@ -333,22 +361,25 @@ export async function importarAlunos(_: Estado, fd: FormData): Promise<Estado> {
   if (linhas.length - 1 > 300) return no('Máximo de 300 alunos por arquivo. Divida em partes.');
   const { data: turmas } = await e.db.from('turmas').select('id,nome');
   const porNome = new Map((turmas ?? []).map(t => [norm(t.nome), t.id]));
-  const admin = supabaseAdmin(); let criados = 0; const erros: string[] = [];
+  const admin = supabaseAdmin(); let criados = 0; const erros: string[] = []; const entregues: { nome: string; email: string; senha: string }[] = [];
   const um = async (i: number) => {
     const c = campos(linhas[i], sep);
     const nome = c[iN], email = c[iE]?.toLowerCase();
     if (!nome || !email || !/^\S+@\S+\.\S+$/.test(email)) { erros.push(`linha ${i + 1}: nome/e-mail inválido`); return; }
     const turma = iT >= 0 && c[iT] ? porNome.get(norm(c[iT])) : undefined;
     if (iT >= 0 && c[iT] && !turma) { erros.push(`linha ${i + 1}: turma "${c[iT]}" não existe`); return; }
+    const senha = senhaProvisoria(); // cada aluno recebe a sua, diferente das outras
     const { data, error } = await admin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { nome, matricula: iM >= 0 ? c[iM] : '', turma_id: turma ?? '' }, app_metadata: { trocar_senha: true } });
     if (error || !data.user) { erros.push(`linha ${i + 1}: ${/already|registered/i.test(error?.message ?? '') ? 'e-mail já cadastrado' : error?.message}`); return; }
     await admin.from('profiles').update({ status: 'ativo' }).eq('id', data.user.id);
-    criados++;
+    entregues.push({ nome, email, senha }); criados++;
   };
   for (let i = 1; i < linhas.length; i += 5) {
     await Promise.all(Array.from({ length: Math.min(5, linhas.length - i) }, (_, k) => um(i + k)));
   }
   revalidatePath('/gestao', 'layout');
-  const resumo = `${criados} aluno(s) criado(s).`;
-  return erros.length ? { ok: criados > 0, msg: `${resumo} Problemas: ${erros.slice(0, 8).join('; ')}${erros.length > 8 ? `… (+${erros.length - 8})` : ''}` } : ok(resumo);
+  const resumo = `${criados} aluno(s) criado(s). Baixe a lista de senhas agora: ela não é mostrada de novo.`;
+  const csv = criados ? ['nome;email;senha_provisoria', ...entregues.map(x => [x.nome, x.email, x.senha].map(v => `"${v.replace(/"/g, '""')}"`).join(';'))].join('\r\n') : undefined;
+  const base = erros.length ? { ok: criados > 0, msg: `${resumo} Problemas: ${erros.slice(0, 8).join('; ')}${erros.length > 8 ? `… (+${erros.length - 8})` : ''}` } : ok(resumo);
+  return { ...base, csv, arquivo: 'alunos-senhas-provisorias.csv' };
 }

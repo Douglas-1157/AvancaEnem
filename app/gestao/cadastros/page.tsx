@@ -27,10 +27,10 @@ export default async function Cadastros() {
         <div className="stack">
           <div className="card"><h2 className="h2" style={{ marginBottom: 6 }}>Aguardando confirmação</h2>
             <div className="list">{pend?.length ? pend.map((p: any) => (
-              <div key={p.id} className="li"><Av nome={p.nome} sm /><div className="tx"><b>{p.nome}</b><small>{p.turmas?.nome ?? 'Sem turma'}{p.matricula ? ` · matrícula ${p.matricula}` : ''}</small></div>
-                <Acao className="btn sm pri" action={decidirCadastro.bind(null, p.id, true) as any}>Aprovar</Acao>
-                <Acao action={decidirCadastro.bind(null, p.id, false) as any}>Recusar</Acao></div>)) : <div className="empty">Nenhum cadastro pendente.</div>}</div></div>
-          {recusados?.length ? <div className="card"><h2 className="h2" style={{ marginBottom: 6 }}>Recusados recentemente</h2><div className="list">{recusados.map((p: any) => <div key={p.id} className="li"><div className="tx"><b>{p.nome}</b><small>{p.turmas?.nome ?? 'Sem turma'}</small></div><Acao action={decidirCadastro.bind(null, p.id, true) as any}>Aprovar</Acao></div>)}</div></div> : null}
+              <div key={p.id} className="li li-item"><Av nome={p.nome} sm /><div className="tx"><b>{p.nome}</b><small>{p.turmas?.nome ?? 'Sem turma'}{p.matricula ? ` · matrícula ${p.matricula}` : ''}</small></div>
+                <div className="li-acoes"><Acao className="btn sm pri" action={decidirCadastro.bind(null, p.id, true) as any}>Aprovar</Acao>
+                <Acao action={decidirCadastro.bind(null, p.id, false) as any}>Recusar</Acao></div></div>)) : <div className="empty">Nenhum cadastro pendente.</div>}</div></div>
+          {recusados?.length ? <div className="card"><h2 className="h2" style={{ marginBottom: 6 }}>Recusados recentemente</h2><div className="list">{recusados.map((p: any) => <div key={p.id} className="li li-item"><div className="tx"><b>{p.nome}</b><small>{p.turmas?.nome ?? 'Sem turma'}</small></div><div className="li-acoes"><Acao action={decidirCadastro.bind(null, p.id, true) as any}>Aprovar</Acao></div></div>)}</div></div> : null}
         </div>
         <div className="stack">
         <Bloco ic="users" titulo="Cadastrar professor" sub="Defina uma senha provisória e repasse à pessoa. Ela pode trocar depois.">
@@ -47,10 +47,9 @@ export default async function Cadastros() {
               {(['aluno', 'professor', 'gestao'] as const).map(pp => <optgroup key={pp} label={pp === 'aluno' ? 'Alunos' : pp === 'professor' ? 'Professores' : 'Gestão'}>{(pessoas ?? []).filter((x: any) => x.papel === pp).map((x: any) => <option key={x.id} value={x.id}>{x.nome}{x.turmas?.nome ? ` · ${x.turmas.nome}` : ''}</option>)}</optgroup>)}</select></div>
             <div className="field full"><label htmlFor="rs">Senha provisória (8+ caracteres)</label><input id="rs" name="senha" type="text" minLength={8} className="inp" required autoComplete="off" /></div>
           </Form></Bloco>
-        <Bloco ic="file" titulo="Importar alunos por planilha" sub={<>No Excel ou Google Planilhas, deixe as colunas <b>nome, email, matricula, turma</b> (matrícula e turma são opcionais; a turma precisa já existir) e salve como CSV. Todos entram já aprovados, com a senha provisória abaixo.</>}>
+        <Bloco ic="file" titulo="Importar alunos por planilha" sub={<>No Excel ou Google Planilhas, deixe as colunas <b>nome, email, matricula, turma</b> (matrícula e turma são opcionais; a turma precisa já existir) e salve como CSV. Todos entram já aprovados. Cada aluno recebe uma senha provisória diferente: ao terminar, baixe a lista (nome, e-mail e senha) e entregue a cada um. No primeiro acesso ele cria a própria senha.</>}>
           <Form action={importarAlunos} botao="Importar">
             <div className="field full"><label htmlFor="ia">Arquivo CSV</label><input id="ia" name="arquivo" type="file" accept=".csv,text/csv" className="inp" required /></div>
-            <div className="field full"><label htmlFor="is">Senha provisória (8+ caracteres)</label><input id="is" name="senha" type="text" minLength={8} className="inp" required autoComplete="off" /></div>
           </Form></Bloco>
         <Bloco ic="school" titulo="Disciplina e turmas de cada professor" sub={<>A disciplina aparece no perfil e já vem escolhida nos formulários. O professor só vê alunos, dúvidas e redações das turmas marcadas. Sem nenhuma marcada, ele não vê nenhuma turma.</>}>
           {profs?.length ? profs.map((p: any) => (

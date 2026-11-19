@@ -27,7 +27,10 @@ export async function redefinirSenha(_: Estado, fd: FormData): Promise<Estado> {
   if (!user) return { ok: false, msg: 'O link expirou. Peça um novo em "Esqueci a senha".' };
   const { error } = await db.auth.updateUser({ password: senha });
   if (error) return { ok: false, msg: error.message.includes('different') ? 'Escolha uma senha diferente da atual.' : 'Não foi possível trocar a senha. Tente de novo.' };
-  if (user.app_metadata?.trocar_senha) await supabaseAdmin().auth.admin.updateUserById(user.id, { app_metadata: { trocar_senha: false } });
+  if (user.app_metadata?.trocar_senha) {
+    await supabaseAdmin().auth.admin.updateUserById(user.id, { app_metadata: { trocar_senha: false } });
+    await db.auth.refreshSession(); // novo token já sem a marca de senha provisória
+  }
   redirect('/painel');
 }
 
@@ -98,27 +101,4 @@ export async function salvarNomeConta(_: Estado, fd: FormData): Promise<Estado> 
   if (error) return { ok: false, msg: 'Não foi possível salvar o nome.' };
   revalidatePath('/', 'layout');
   return { ok: true, msg: 'Nome atualizado.' };
-}
-
-const EXT_FOTO: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
-export async function salvarFotoConta(_: Estado, fd: FormData): Promise<Estado> {
-  const db = await supabaseServer();
-  const { data: { user } } = await db.auth.getUser();
-  if (!user) return { ok: false, msg: 'Sua sessão expirou. Entre de novo.' };
-  const file = fd.get('foto');
-  if (String(fd.get('remover_foto') ?? '') === '1' && !(file instanceof File && file.size > 0)) {
-    await db.from('profiles').update({ avatar_url: null }).eq('id', user.id);
-    revalidatePath('/', 'layout'); return { ok: true, msg: 'Foto removida.' };
-  }
-  if (!(file instanceof File) || file.size === 0) return { ok: false, msg: 'Escolha uma imagem.' };
-  const ext = EXT_FOTO[file.type];
-  if (!ext) return { ok: false, msg: 'Use uma imagem PNG, JPG ou WEBP.' };
-  if (file.size > 2 * 1024 * 1024) return { ok: false, msg: 'A foto passa de 2 MB. Escolha uma menor.' };
-  const caminho = `${user.id}/${crypto.randomUUID()}.${ext}`;
-  const up = await db.storage.from('avatares').upload(caminho, file, { contentType: file.type });
-  if (up.error) return { ok: false, msg: 'Falha ao enviar a foto: ' + up.error.message };
-  const url = db.storage.from('avatares').getPublicUrl(caminho).data.publicUrl;
-  const { error } = await db.from('profiles').update({ avatar_url: url }).eq('id', user.id);
-  if (error) return { ok: false, msg: 'Não foi possível salvar a foto.' };
-  revalidatePath('/', 'layout'); return { ok: true, msg: 'Foto atualizada.' };
 }

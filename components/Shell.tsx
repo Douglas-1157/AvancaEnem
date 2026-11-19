@@ -35,7 +35,7 @@ function FocoTopo() {
   );
 }
 
-export function Shell({ menu, extra, nome, papel, foto, children }: { menu: ItemMenu[]; extra?: ItemMenu[]; nome: string; papel: string; foto?: string | null; children: ReactNode }) {
+export function Shell({ menu, extra, nome, papel, children }: { menu: ItemMenu[]; extra?: ItemMenu[]; nome: string; papel: string; children: ReactNode }) {
   const path = usePathname(); const router = useRouter(); const [aberto, setAberto] = useState(false);
   useEffect(() => { setAberto(false); }, [path]);
   const ativo = (m: ItemMenu) => (m.exato ? path === m.href : path === m.href || path.startsWith(m.href + '/'));
@@ -64,7 +64,7 @@ export function Shell({ menu, extra, nome, papel, foto, children }: { menu: Item
           <span className="sp" />
           {path.startsWith('/aluno') && <FocoTopo />}
           <span className="who-top"><b>{nome}</b><small>{papel}</small></span>
-          <button className="av" onClick={() => setAberto(!aberto)} aria-label="Menu da conta" aria-expanded={aberto}>{foto ? <img src={foto} alt="" /> : iniciais(nome)}</button>
+          <button className="av" onClick={() => setAberto(!aberto)} aria-label="Menu da conta" aria-expanded={aberto}>{iniciais(nome)}</button>
           {aberto && (
             <div className="menu">
               <div className="who"><b>{nome}</b><small>{papel}</small></div>

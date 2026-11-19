@@ -9,8 +9,8 @@ type A = (p: Estado, f: FormData) => Promise<Estado>;
 type D = { id: string; nome: string; area: string }; type C = { id: string; area: string; codigo: string; nome: string }; type T = { id: string; nome: string };
 type Q = { id: string; enunciado: string; disciplina_id: string; n: number; comp: string | null; competencia_id: string | null; alternativas: string[]; correta: number; comentario: string | null; imagem_url: string | null; comentario_imagem_url: string | null; arquivada: boolean };
 
-export function Banco({ disciplinas, competencias, turmas, modulos, questoes, criarQuestao, editarQuestao, arquivarQuestao, criarSimulado, padrao }: { padrao?: string;
-  disciplinas: D[]; competencias: C[]; turmas: T[]; modulos: { id: string; nome: string; disciplina_id: string }[]; questoes: Q[]; criarQuestao: A; editarQuestao: A; arquivarQuestao: (id: string, arquivada: boolean) => Promise<void>; criarSimulado: A;
+export function Banco({ disciplinas, competencias, turmas, modulos, questoes, criarQuestao, editarQuestao, arquivarQuestao, excluirQuestao, criarSimulado, padrao }: { padrao?: string;
+  disciplinas: D[]; competencias: C[]; turmas: T[]; modulos: { id: string; nome: string; disciplina_id: string }[]; questoes: Q[]; criarQuestao: A; editarQuestao: A; arquivarQuestao: (id: string, arquivada: boolean) => Promise<void>; excluirQuestao: (id: string) => Promise<Estado>; criarSimulado: A;
 }) {
   const [sel, setSel] = useState<string[]>([]); const [tq, setTq] = useState('2');
   const [aba, setAba] = useState<'banco' | 'nova' | 'simulado'>('banco'); const [fd, setFd] = useState(''); const [edit, setEdit] = useState<Q | null>(null); const [arq, setArq] = useState(false);
@@ -24,10 +24,11 @@ export function Banco({ disciplinas, competencias, turmas, modulos, questoes, cr
       {aba === 'banco' && !edit && (
         <div className="card">
           <div className="row" style={{ marginBottom: 10 }}><label className="sr" htmlFor="filtro">Disciplina</label><select id="filtro" className="inp" style={{ maxWidth: 260 }} value={fd} onChange={e => setFd(e.target.value)}><option value="">Todas as disciplinas</option>{disciplinas.map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}</select><label className="chip" style={{ cursor: 'pointer' }}><input type="checkbox" checked={arq} onChange={e => setArq(e.target.checked)} style={{ marginRight: 6 }} />Mostrar arquivadas</label><span className="sub">{lista.length} questões</span></div>
-          <div className="list">{lista.length ? lista.map(q => <div key={q.id} className="li" style={q.arquivada ? { opacity: .6 } : undefined}><div className="tx"><b className="trunc" style={{ display: 'block' }}>{q.enunciado}</b><small>{disciplinas.find(x => x.id === q.disciplina_id)?.nome}{q.comp ? ` · comp. ${q.comp}` : ''} · {q.n} alternativas{q.imagem_url ? ' · com imagem' : ''}</small></div>
-            {q.arquivada && <span className="pill">Arquivada</span>}
+          <div className="list">{lista.length ? lista.map(q => <div key={q.id} className="li li-item" style={q.arquivada ? { opacity: .6 } : undefined}><div className="tx"><b className="trunc" style={{ display: 'block' }}>{q.enunciado}</b><small>{disciplinas.find(x => x.id === q.disciplina_id)?.nome}{q.comp ? ` · comp. ${q.comp}` : ''} · {q.n} alternativas{q.imagem_url ? ' · com imagem' : ''}</small></div>
+            <div className="li-acoes">{q.arquivada && <span className="pill">Arquivada</span>}
             <button type="button" className="btn sm" onClick={() => setEdit(q)}>Editar</button>
-            <Acao className="btn sm ghost" confirmar={q.arquivada ? undefined : 'Arquivar esta questão? Ela sai do banco e da montagem de simulados, mas continua nos simulados já publicados.'} action={arquivarQuestao.bind(null, q.id, !q.arquivada) as any}>{q.arquivada ? 'Restaurar' : 'Arquivar'}</Acao></div>) : <div className="empty">Nenhuma questão ainda.</div>}</div>
+            <Acao className="btn sm ghost" confirmar={q.arquivada ? undefined : 'Arquivar esta questão? Ela sai do banco e da montagem de simulados, mas continua nos simulados já publicados.'} action={arquivarQuestao.bind(null, q.id, !q.arquivada) as any}>{q.arquivada ? 'Restaurar' : 'Arquivar'}</Acao>
+              <Acao className="btn sm ghost" confirmar="Excluir esta questão de vez? Isso não pode ser desfeito." action={excluirQuestao.bind(null, q.id) as any}>Excluir</Acao></div></div>) : <div className="empty">Nenhuma questão ainda.</div>}</div>
         </div>
       )}
       {aba === 'nova' && !edit && (
@@ -71,7 +72,7 @@ function FormQuestao({ action, botao, disciplinas, competencias, padrao, q }: { 
       <div className="field"><label htmlFor="qd">Disciplina</label><select id="qd" name="disciplina_id" className="inp" value={d} onChange={e => setD(e.target.value)}>{disciplinas.map(x => <option key={x.id} value={x.id}>{x.nome}</option>)}</select></div>
       <div className="field"><label htmlFor="qc">Competência</label><select id="qc" name="competencia_id" className="inp" defaultValue={q?.competencia_id ?? ''}><option value="">Nenhuma</option>{competencias.filter(c => c.area === area).map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nome}</option>)}</select><input name="competencia_nova" className="inp" placeholder="ou escreva outra competência" maxLength={80} style={{ marginTop: 6 }} /></div>
       <div className="field full"><label htmlFor="qe">Enunciado</label><textarea id="qe" name="enunciado" className="inp" required defaultValue={q?.enunciado} /></div>
-      <CampoImagem id="qi" name="imagem" label="Imagem do enunciado (opcional)" atual={q?.imagem_url} dica="Gráfico, figura, mapa, charge ou tabela. PNG, JPG, WEBP ou GIF, até 4 MB." />
+      <CampoImagem id="qi" name="imagem" label="Imagem do enunciado (opcional)" atual={q?.imagem_url} dica="Gráfico, figura, mapa, charge ou tabela. Fotos grandes são reduzidas automaticamente." />
       {[0, 1, 2, 3, 4].map(i => <div key={i} className="field full"><label htmlFor={`a${i}`}>Alternativa {'ABCDE'[i]}{i > 1 ? ' (opcional)' : ''}</label><div className="row" style={{ flexWrap: 'nowrap' }}><input id={`a${i}`} name={`alt${i}`} className="inp" required={i < 2} defaultValue={q?.alternativas?.[i] ?? ''} /><label className="chip" style={{ whiteSpace: 'nowrap', cursor: 'pointer' }}><input type="radio" name="correta" value={i} required defaultChecked={q ? q.correta === i : false} style={{ marginRight: 6 }} />correta</label></div></div>)}
       <div className="field full"><label htmlFor="qj">Comentário do gabarito (aparece depois da entrega)</label><textarea id="qj" name="comentario" className="inp" defaultValue={q?.comentario ?? ''} /></div>
       <CampoImagem id="qji" name="comentario_imagem" label="Imagem no comentário do gabarito (opcional)" atual={q?.comentario_imagem_url} dica="Resolução desenhada, esquema ou passo a passo." />

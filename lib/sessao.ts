@@ -10,7 +10,13 @@ const carregar = cache(async () => {
   // caso contrário o próprio SDK confirma com o Auth. Evita uma espera extra em cada troca de tela.
   const { data } = await db.auth.getClaims();
   const c = data?.claims as { sub?: string; app_metadata?: { trocar_senha?: boolean } } | undefined;
-  const user = c?.sub ? { id: c.sub, app_metadata: c.app_metadata ?? {} } : null;
+  let user: { id: string; app_metadata: { trocar_senha?: boolean } } | null = c?.sub ? { id: c.sub, app_metadata: { trocar_senha: !!c.app_metadata?.trocar_senha } } : null;
+  // O token guarda uma cópia do app_metadata que pode estar velha (ex.: logo depois de criar a própria senha).
+  // Enquanto a marca "trocar_senha" estiver ligada nele, confirma no servidor de Auth para não entrar em loop de redirecionamento.
+  if (user?.app_metadata?.trocar_senha) {
+    const { data: { user: fresco } } = await db.auth.getUser();
+    user = fresco ? { id: fresco.id, app_metadata: { trocar_senha: !!fresco.app_metadata?.trocar_senha } } : null;
+  }
   if (!user) return { db, user: null, perfil: null };
   const { data: perfil } = await db.from('profiles').select('*').eq('id', user.id).single<Perfil>();
   return { db, user, perfil };
