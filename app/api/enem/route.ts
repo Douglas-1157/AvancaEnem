@@ -4,8 +4,13 @@ import { supabaseServer } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+<<<<<<< HEAD
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 const BASE = 'https://download.inep.gov.br/enem/provas_e_gabaritos/';
+=======
+const BASE = 'https://download.inep.gov.br/enem/provas_e_gabaritos/';
+const PAGINA_OFICIAL = 'https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem/provas-e-gabaritos';
+>>>>>>> e7fda5fb2c20a7b2e8f8d0099e844ac053afea71
 // Caderno padrão (azul) de cada dia. Se o Inep mudar o código em algum ano, tenta os alternativos.
 const CADERNOS: Record<string, string[]> = { '1': ['CD1', 'CD2'], '2': ['CD7', 'CD5', 'CD6'] };
 
@@ -24,7 +29,11 @@ export async function GET(req: NextRequest) {
   for (const cd of CADERNOS[dia]) {
     const url = `${BASE}${ano}_${tipo === 'prova' ? 'PV' : 'GB'}_impresso_D${dia}_${cd}.pdf`;
     try {
+<<<<<<< HEAD
       const r = await fetch(url, { redirect: 'follow', cache: 'no-store', headers: { 'User-Agent': UA, Accept: 'application/pdf,*/*', 'Accept-Language': 'pt-BR,pt;q=0.9' } });
+=======
+      const r = await fetch(url, { redirect: 'follow', cache: 'no-store' });
+>>>>>>> e7fda5fb2c20a7b2e8f8d0099e844ac053afea71
       if (r.ok && r.body && !(r.headers.get('content-type') ?? '').includes('html')) {
         const h: Record<string, string> = {
           'Content-Type': 'application/pdf',
@@ -37,7 +46,12 @@ export async function GET(req: NextRequest) {
       await r.body?.cancel();
     } catch { /* tenta o próximo */ }
   }
+<<<<<<< HEAD
   // O servidor não conseguiu buscar (o Inep às vezes bloqueia servidores): manda o navegador direto ao arquivo oficial.
   const cd = CADERNOS[dia][0];
   return NextResponse.redirect(`${BASE}${ano}_${tipo === 'prova' ? 'PV' : 'GB'}_impresso_D${dia}_${cd}.pdf`);
+=======
+  // Não achou o arquivo: leva a pessoa para a página oficial, onde ela escolhe o caderno.
+  return NextResponse.redirect(PAGINA_OFICIAL);
+>>>>>>> e7fda5fb2c20a7b2e8f8d0099e844ac053afea71
 }
