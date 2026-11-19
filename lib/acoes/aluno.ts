@@ -65,7 +65,8 @@ export async function salvarRedacao(temaId: string, texto: string, enviar: boole
   if (!user) return { ok: false, erro: 'Sessão expirada.' };
   if (enviar && texto.trim().split(/\s+/).length < 30) return { ok: false, erro: 'Escreva um pouco mais antes de enviar (mínimo de 30 palavras).' };
   const { data: ex } = await db.from('redacoes').select('id,status').eq('tema_id', temaId).eq('aluno_id', user.id).maybeSingle();
-  const status = enviar ? 'enviada' : 'rascunho';
+  // Salvar rascunho de uma redação já enviada não a tira da fila de correção do professor.
+  const status = enviar || ex?.status === 'enviada' ? 'enviada' : 'rascunho';
   const { error } = ex
     ? await db.from('redacoes').update({ texto, status }).eq('id', ex.id)
     : await db.from('redacoes').insert({ tema_id: temaId, aluno_id: user.id, texto, status });

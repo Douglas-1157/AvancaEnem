@@ -4,7 +4,7 @@ const csp = [
   "script-src 'self' 'unsafe-inline'" + (process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"),
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${sup}`,
   `connect-src 'self' ${sup} ${sup.replace('https://', 'wss://')}`,
   "frame-src https://www.youtube.com https://www.youtube-nocookie.com " + sup,
   "frame-ancestors 'none'", "base-uri 'self'", "form-action 'self'", "object-src 'none'",
@@ -15,7 +15,8 @@ export default {
   reactStrictMode: true,
   poweredByHeader: false,
   // Apostilas em PDF são enviadas por Server Action.
-  experimental: { serverActions: { bodySizeLimit: '25mb' } },
+  // staleTimes: telas já visitadas reabrem na hora durante 20 s (ações do usuário invalidam o cache).
+  experimental: { serverActions: { bodySizeLimit: '25mb' }, staleTimes: { dynamic: 20, static: 180 } },
   async headers() {
     return [{ source: '/(.*)', headers: [
       { key: 'Content-Security-Policy', value: csp },

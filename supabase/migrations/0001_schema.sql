@@ -1,4 +1,4 @@
--- EduConecta · Esquenta pro ENEM — esquema do banco (uma escola)
+-- Avança ENEM — esquema do banco (uma escola)
 -- Execute os arquivos 0001 a 0004 em ordem no SQL Editor do Supabase.
 
 create extension if not exists pgcrypto;

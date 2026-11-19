@@ -3,10 +3,10 @@
 insert into disciplinas (nome, area, ordem) values
  ('História','humanas',1),('Geografia','humanas',2),('Filosofia','humanas',3),('Sociologia','humanas',4),
  ('Português','linguagens',5),('Literatura','linguagens',6),('Inglês','linguagens',7),('Espanhol','linguagens',8),
- ('Artes e Educação Física','linguagens',9),
- ('Matemática','matematica',10),
- ('Biologia','natureza',11),('Química','natureza',12),('Física','natureza',13),
- ('Redação','redacao',14)
+ ('Artes','linguagens',9),('Educação Física','linguagens',10),
+ ('Matemática','matematica',11),
+ ('Biologia','natureza',12),('Química','natureza',13),('Física','natureza',14),
+ ('Redação','redacao',15)
 on conflict (nome) do nothing;
 
 -- Competências usadas na nota do simulado (peso relativo). A gestão pode editar.
