@@ -14,9 +14,10 @@ export async function middleware(req: NextRequest) {
       },
     },
   });
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: claims } = await supabase.auth.getClaims();
+  const user = claims?.claims?.sub ? claims.claims : null;
   const p = req.nextUrl.pathname;
-  const privado = /^\/(aluno|professor|gestao|painel)(\/|$)/.test(p);
+  const privado = /^\/(aluno|professor|gestao|painel|conta)(\/|$)/.test(p);
   if (!user && privado) {
     const url = req.nextUrl.clone(); url.pathname = '/entrar'; url.search = '';
     return NextResponse.redirect(url);
