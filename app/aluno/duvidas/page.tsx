@@ -1,13 +1,16 @@
 import { exigirPerfil } from '@/lib/sessao';
 import { NovaDuvida } from './NovaDuvida';
+import { AtualizarAvisos } from '@/components/AtualizarAvisos';
 
 export const dynamic = 'force-dynamic';
 export default async function Duvidas({ searchParams }: { searchParams: Promise<{ ctx?: string }> }) {
   const sp = await searchParams;
   const { perfil, db } = await exigirPerfil('aluno');
   const { data } = await db.from('duvidas').select('*').eq('aluno_id', perfil.id).order('created_at', { ascending: false });
+  await db.rpc('marcar_duvidas_vistas');
   return (
     <>
+      <AtualizarAvisos />
       <div><h1 className="h1">Dúvidas</h1><p className="sub">Pergunte ao professor. Você também pode perguntar de dentro de uma aula ou de uma questão.</p></div>
       <div className="cols">
         <NovaDuvida contexto={sp.ctx ?? ''} />

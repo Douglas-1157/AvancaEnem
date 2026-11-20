@@ -24,7 +24,7 @@ export default async function InfoSimulado({ params }: { params: Promise<{ id: s
       <div className="row"><Link href="/aluno/simulados" className="btn sm"><Icon n="left" s={14} /> Voltar</Link></div>
       <div className="card" style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div><Pill tone="wip">{(s as any).disciplinas?.nome ?? 'Geral'}</Pill><h1 className="h1" style={{ marginTop: 10 }}>{s.titulo}</h1></div>
-        <div className="facts"><div className="fact"><small>Questões</small><b>{(count as any) ?? '–'}</b></div><div className="fact"><small>Tempo</small><b>{s.minutos} min</b></div><div className="fact"><small>Nota</small><b>0 a 1000</b></div></div>
+        <div className="facts"><div className="fact"><small>Questões</small><b>{(count as any) ?? '–'}</b></div><div className="fact"><small>Tempo</small><b>{s.minutos} min</b>{typeof count === 'number' && count > 0 ? <small>≈ {Math.round((s.minutos / count) * 10) / 10} min por questão</small> : null}</div><div className="fact"><small>Nota</small><b>0 a 1000</b></div></div>
         <div><h2 className="h2" style={{ marginBottom: 8 }}>Como funciona</h2><div className="list">
           {['Suas respostas são salvas sozinhas.', 'Você pode voltar e trocar respostas até entregar.', 'Marque com a bandeira as questões que quer rever.', 'O gabarito comentado aparece depois da entrega.', 'Se a internet cair, continue respondendo. Enviamos tudo quando voltar.'].map(t => (
             <div key={t} className="li" style={{ padding: '8px 0' }}><span style={{ color: 'var(--ok)' }}><Icon n="check" s={16} /></span><div className="tx">{t}</div></div>))}</div></div>

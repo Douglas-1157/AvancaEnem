@@ -32,11 +32,12 @@ export default async function Resultado({ params }: { params: Promise<{ tid: str
             <div key={q.questao_id} className="card">
               <div className="row sb"><span className="sub num">Questão {i + 1}</span>{q.marcada === q.correta ? <span className="pill ok">Acertou</span> : q.marcada === null ? <span className="pill warn">Em branco</span> : <span className="pill bad">Errou</span>}</div>
               <p style={{ margin: '8px 0 12px', textWrap: 'pretty', whiteSpace: 'pre-wrap' }}>{q.enunciado}</p>
+              {q.imagem_url && <img className="qimg" src={q.imagem_url} alt="Imagem da questão" />}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {(q.alternativas as string[]).map((o, k) => (
                   <div key={k} className={`alt${k === q.correta ? ' right' : q.marcada === k ? ' wrong' : ''}`}><span className="lt">{L[k]}</span><span>{o}{k === q.correta && <b> (correta)</b>}{q.marcada === k && k !== q.correta && <b> (sua resposta)</b>}</span></div>))}
               </div>
-              {q.comentario && <p className="note" style={{ marginTop: 12 }}><b>Por quê:</b> {q.comentario}</p>}
+              {(q.comentario || q.comentario_imagem_url) && <div className="note" style={{ marginTop: 12 }}>{q.comentario && <p><b>Por quê:</b> {q.comentario}</p>}{q.comentario_imagem_url && <img className="qimg" src={q.comentario_imagem_url} alt="Imagem do comentário" />}</div>}
               <Link className="btn sm" style={{ marginTop: 12 }} href={`/aluno/duvidas?ctx=${encodeURIComponent(`Simulado · ${(t as any).simulados?.titulo} · Questão ${i + 1}`)}`}><Icon n="chat" s={14} /> Perguntar ao professor</Link>
             </div>
           ))}
