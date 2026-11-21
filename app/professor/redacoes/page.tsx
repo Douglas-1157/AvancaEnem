@@ -1,27 +1,46 @@
 import Link from 'next/link';
 import { exigirPerfil } from '@/lib/sessao';
+import { turmasVisiveis } from '@/lib/escopo';
 import { Av } from '@/components/ui';
 import { Form } from '@/components/Form';
+import { Busca, Paginacao } from '@/components/Filtros';
+import { POR_PAGINA, likeSeguro, pag } from '@/lib/consulta';
+import { Cab } from '@/components/Painel';
 import { criarTemaRedacao } from '@/lib/acoes/equipe';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Redacoes({ searchParams }: { searchParams: Promise<{ aba?: string }> }) {
+export default async function Redacoes({ searchParams }: { searchParams: Promise<{ aba?: string; q?: string; turma?: string; p?: string }> }) {
   const sp = await searchParams; const aba = sp.aba === 'corrigidas' ? 'corrigida' : 'enviada';
-  const { db } = await exigirPerfil();
-  const [{ data: reds }, { data: turmas }, { data: temas }] = await Promise.all([
-    db.from('redacoes').select('id,nota,enviada_em,corrigida_em,profiles!redacoes_aluno_id_fkey(nome),redacao_temas(titulo)').eq('status', aba).order(aba === 'enviada' ? 'enviada_em' : 'corrigida_em', { ascending: aba === 'enviada' }),
-    db.from('turmas').select('id,nome').order('nome'),
+  const busca = (sp.q ?? '').trim().slice(0, 80);
+  const pagina = pag(sp.p), de = (pagina - 1) * POR_PAGINA;
+  const { db, perfil } = await exigirPerfil();
+  const [{ count: nEnv }, { data: corr }] = await Promise.all([
+    db.from('redacoes').select('id', { count: 'exact', head: true }).eq('status', 'enviada'),
+    db.from('redacoes').select('nota').eq('status', 'corrigida').limit(500),
+  ]);
+  const mediaNota = corr?.length ? Math.round(corr.reduce((a: number, r: any) => a + (r.nota ?? 0), 0) / corr.length) : null;
+  const { data: turmas } = await turmasVisiveis(db, perfil);
+  const turma = (turmas ?? []).some(t => t.id === sp.turma) ? sp.turma : undefined;
+  let consulta = db.from('redacoes').select('id,nota,enviada_em,corrigida_em,profiles!redacoes_aluno_id_fkey!inner(nome,turma_id),redacao_temas(titulo)', { count: 'exact' }).eq('status', aba);
+  if (busca) consulta = consulta.ilike('profiles.nome', `%${likeSeguro(busca)}%`);
+  if (turma) consulta = consulta.eq('profiles.turma_id', turma);
+  const [{ data: reds, count: nReds }, { data: temas }] = await Promise.all([
+    consulta.order(aba === 'enviada' ? 'enviada_em' : 'corrigida_em', { ascending: aba === 'enviada' }).range(de, de + POR_PAGINA - 1),
     db.from('redacao_temas').select('id,titulo,prazo,redacao_tema_turmas(turmas(nome))').order('created_at', { ascending: false }),
   ]);
+  const abaUrl = aba === 'corrigida' ? 'corrigidas' : undefined;
   return (
     <>
-      <div><h1 className="h1">Redações</h1><p className="sub">Corrija com as 5 competências do ENEM (0 a 200 cada) e deixe um comentário.</p></div>
-      <div className="tabs" role="tablist"><Link className={aba === 'enviada' ? 'on' : ''} href="?">Para corrigir</Link><Link className={aba === 'corrigida' ? 'on' : ''} href="?aba=corrigidas">Corrigidas</Link></div>
+      <Cab titulo="Redações" sub="Corrija com as 5 competências do ENEM (0 a 200 cada) e deixe um comentário."
+        info={[['Para corrigir', nEnv ?? 0], ['Corrigidas', corr?.length ?? 0], ['Média das notas', mediaNota === null ? '—' : mediaNota], ['Temas publicados', temas?.length ?? 0]]} />
+      <div className="tabs" role="tablist"><Link scroll={false} className={aba === 'enviada' ? 'on' : ''} href="?">Para corrigir</Link><Link scroll={false} className={aba === 'corrigida' ? 'on' : ''} href="?aba=corrigidas">Corrigidas</Link></div>
+      <Busca base="/professor/redacoes" params={{ aba: abaUrl }} q={busca} turma={turma} turmas={turmas ?? undefined} placeholder="Buscar redações por aluno" />
       <div className="cols">
         <div className="card"><div className="list">{reds?.length ? reds.map((r: any) => (
           <Link key={r.id} href={`/professor/redacoes/${r.id}`} className="li"><Av nome={r.profiles?.nome ?? '?'} sm /><div className="tx"><b>{r.profiles?.nome}</b><small>{r.redacao_temas?.titulo} · {new Date(r.enviada_em ?? r.corrigida_em).toLocaleDateString('pt-BR')}</small></div>{aba === 'corrigida' ? <b className="mono">{r.nota}</b> : <span className="btn sm pri">Corrigir</span>}</Link>))
-          : <div className="empty">{aba === 'enviada' ? 'Nenhuma redação aguardando correção.' : 'Nenhuma redação corrigida ainda.'}</div>}</div></div>
+          : <div className="empty">{busca || turma ? 'Nenhuma redação com esse filtro.' : aba === 'enviada' ? 'Nenhuma redação aguardando correção.' : 'Nenhuma redação corrigida ainda.'}</div>}</div>
+          <Paginacao pagina={pagina} total={nReds ?? 0} base="/professor/redacoes" params={{ aba: abaUrl, turma, q: busca || undefined }} /></div>
         <div className="stack">
           <div className="card"><h2 className="h2">Novo tema</h2>
             <Form action={criarTemaRedacao} botao="Publicar tema">

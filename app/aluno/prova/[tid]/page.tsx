@@ -14,5 +14,5 @@ export default async function ProvaPage({ params }: { params: Promise<{ tid: str
   const s: any = t.simulados;
   const total = s.minutos * 60, gasto = Math.floor((Date.now() - new Date(t.iniciada_em).getTime()) / 1000);
   return <Prova tentativa={tid} titulo={`${t.treino ? 'Treino · ' : ''}${s.titulo}`} restante={Math.max(0, total - gasto)}
-    questoes={((qs ?? []) as any[]).map(q => ({ id: q.questao_id, enunciado: q.enunciado, alternativas: q.alternativas as string[], competencia: q.competencia, marcada: q.marcada }))} />;
+    questoes={((qs ?? []) as any[]).map(q => ({ id: q.questao_id, enunciado: q.enunciado, alternativas: q.alternativas as string[], competencia: q.competencia, marcada: q.marcada, imagem: q.imagem_url ?? null }))} />;
 }
