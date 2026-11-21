@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { Logo, Wordmark } from '@/components/Logo';
+import { IlTrilha } from '@/components/Ilustracoes';
 import { Pb } from '@/components/ui';
 import { ThemeBtn } from './ThemeBtn';
 import { ProfTabs } from './ProfTabs';
@@ -27,6 +28,8 @@ const FAQ = [
 ];
 const ONDA = Array.from({ length: 108 }, (_, k) => ({ c: k % 36, r: Math.floor(k / 36) }));
 
+const EQUIPE = ['Douglas-1157', 'Kaua-Pietro', 'paulina-batista', 'Devyas-05', 'DevFranklyn'];
+
 export function Landing() {
   return (
     <div className="land" style={{ background: 'var(--panel)', minHeight: '100vh' }}>
@@ -39,7 +42,7 @@ export function Landing() {
 
       <section className="wrap hero2"><div className="hgrid">
         <div>
-          <span className="eyebrow"><i /> Esquenta pro ENEM</span>
+          <span className="eyebrow"><i /> Plataforma de estudos para o ENEM</span>
           <h1>O ENEM inteiro, <em>um passo de cada vez.</em></h1>
           <p className="lead">Trilhas, apostilas, simulados e redação das quatro áreas do ENEM, com o professor acompanhando de perto. Feito para a nossa escola.</p>
           <div className="row" style={{ marginTop: 28 }}><Link className="btn dk lg" href="/entrar">Entrar na plataforma <Icon n="arrow" s={16} /></Link><a className="btn lg" href="#como">Ver como funciona</a></div>
@@ -105,12 +108,16 @@ export function Landing() {
 
       <section className="cta2"><div className="wrap">
         <div className="cwave" aria-hidden="true">{ONDA.map((o, k) => <i key={k} style={{ ['--c' as any]: o.c, ['--r' as any]: o.r }} />)}</div>
-        <h2>Pronto para começar o esquenta?</h2><p>Crie sua conta de aluno ou entre com o acesso que a escola te passou.</p>
+        <div className="ilbox"><IlTrilha /></div>
+        <h2>Pronto para avançar rumo ao ENEM?</h2><p>Crie sua conta de aluno ou entre com o acesso que a escola te passou.</p>
         <div className="row" style={{ justifyContent: 'center' }}><Link className="btn dk lg" href="/entrar?criar=1">Criar conta de aluno</Link><Link className="btn lg" href="/entrar">Já tenho conta</Link></div>
       </div></section>
 
-      <footer className="wrap lfoot"><span className="row" style={{ gap: 10 }}><Logo size={28} /><Wordmark /><span>© {new Date().getFullYear()} · Esquenta pro ENEM</span></span>
-        <nav>{NAV.map(([id, l]) => <a key={id} href={`#${id}`} style={{ color: 'var(--mute)', padding: '6px 8px' }}>{l}</a>)}</nav></footer>
+      <footer className="wrap lfoot"><span className="row" style={{ gap: 10 }}><Logo size={28} /><Wordmark /><span>© {new Date().getFullYear()} · Plataforma de estudos para o ENEM</span></span>
+        <nav>{NAV.map(([id, l]) => <a key={id} href={`#${id}`} style={{ color: 'var(--mute)', padding: '6px 8px' }}>{l}</a>)}</nav>
+        <div className="lteam" aria-label="Equipe do projeto"><span>Feito por</span>
+          {EQUIPE.map(u => <a key={u} href={`https://github.com/${u}`} target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>{u}</a>)}
+        </div></footer>
     </div>
   );
 }

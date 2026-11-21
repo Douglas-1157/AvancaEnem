@@ -46,7 +46,7 @@ export default async function Aula({ params }: { params: Promise<{ id: string }>
             <div className="doc"><Icon n="file" s={36} /><div><b>{it.titulo}</b><div className="sub">PDF · cerca de {it.minutos} min de leitura</div></div>
               {pdf ? <a className="btn" href={pdf} target="_blank" rel="noreferrer">Abrir PDF</a> : <span className="pill">Arquivo não anexado</span>}</div>
           )}
-          {!bloqueada && <AulaAcoes itemId={it.id} tipo={it.tipo as 'video' | 'pdf'} concluido={it.concluido} titulo={tituloItem(it)} proxima={prox && prox.estado !== 'lock' ? hrefItem(prox) : null} />}
+          {!bloqueada && <AulaAcoes alunoId={perfil.id} itemId={it.id} tipo={it.tipo as 'video' | 'pdf'} concluido={it.concluido} titulo={tituloItem(it)} proxima={prox && prox.estado !== 'lock' ? hrefItem(prox) : null} />}
         </div>
         <div className="card"><h2 className="h2">{it.modulo}</h2><p className="sub" style={{ marginBottom: 8 }}>Etapas deste módulo</p>
           <div className="list">{mod.map(x => (

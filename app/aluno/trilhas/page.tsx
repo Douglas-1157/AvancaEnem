@@ -4,6 +4,8 @@ import { carregarTrilhas, iconeTipo, razaoBloqueio, type ItemTrilha, type Discip
 import { Icon } from '@/components/Icon';
 import { Pb, fmtPrazo } from '@/components/ui';
 import { hrefItem, tituloItem } from '@/components/Linha';
+import { normalizarSP } from '@/lib/consulta';
+import { Cab } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,18 +31,22 @@ function Etapa({ it, d }: { it: ItemTrilha; d: Disciplina }) {
 export default async function Trilhas({ searchParams }: { searchParams: Promise<{ d?: string }> }) {
   const { perfil, db } = await exigirPerfil('aluno');
   const { disciplinas, trava } = await carregarTrilhas(db, perfil);
-  const sp = await searchParams;
+  const sp = normalizarSP(await searchParams);
   const d = disciplinas.find(x => x.id === sp.d) ?? disciplinas[0];
   if (!d) return <><div><h1 className="h1">Trilhas de aprendizagem</h1></div><div className="empty">Ainda não há conteúdo publicado para a sua turma.</div></>;
   const done = d.itens.filter(x => x.concluido).length, pc = Math.round((done / d.itens.length) * 100);
   const now = d.itens.find(x => x.estado === 'now');
   const mods = [...new Set(d.itens.map(x => x.modulo))];
+  const todos = disciplinas.flatMap(x => x.itens), todosFeitos = todos.filter(x => x.concluido).length, emAndamento = todos.filter(x => x.pct > 0 && !x.concluido).length;
   return (
     <>
-      <div><h1 className="h1">Trilhas de aprendizagem</h1><p className="sub">Siga a ordem das etapas. Cada uma libera a próxima.</p></div>
-      <div className="tabs" role="tablist">
-        {disciplinas.map(x => { const n = x.itens.filter(i => i.concluido).length; return (
-          <Link key={x.id} role="tab" aria-selected={x.id === d.id} className={x.id === d.id ? 'on' : ''} href={`/aluno/trilhas?d=${x.id}`}>{x.nome}<span className="cnt">{n}/{x.itens.length}</span></Link>
+      <Cab titulo="Trilhas de aprendizagem" sub="Siga a ordem das etapas. Cada uma libera a próxima."
+        info={[['Disciplinas', disciplinas.length], ['Etapas concluídas', `${todosFeitos} de ${todos.length}`], ['Progresso geral', `${todos.length ? Math.round((todosFeitos / todos.length) * 100) : 0}%`], ['Em andamento', emAndamento]]} />
+      <div className="dsel" role="tablist">
+        {disciplinas.map((x, i) => { const n = x.itens.filter(i2 => i2.concluido).length, p = x.itens.length ? Math.round((n / x.itens.length) * 100) : 0; return (
+          <Link scroll={false} key={x.id} role="tab" aria-selected={x.id === d.id} className={`dc${x.id === d.id ? ' on' : ''}`} href={`/aluno/trilhas?d=${x.id}`}>
+            <span className={`dl-av ${['c1', 'c5', 'c3', 'c4', 'c2'][i % 5]}`}>{x.nome[0]}</span><b>{x.nome}</b><small>{n} de {x.itens.length} etapas</small><Pb p={p} cls={p >= 100 ? 'ok' : ''} />
+          </Link>
         ); })}
       </div>
       <div className="cols">
