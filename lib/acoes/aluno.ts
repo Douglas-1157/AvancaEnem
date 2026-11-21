@@ -5,9 +5,13 @@ import { supabaseServer } from '../supabase/server';
 type R = { ok: boolean; erro?: string };
 const msg = (e: { message: string } | null): R => (e ? { ok: false, erro: e.message } : { ok: true });
 
-export async function concluirItem(itemId: string): Promise<R> {
+// `segundos` = tempo em que a pessoa ficou na aula (medido na tela). O banco limita ao tempo cadastrado do item.
+export async function concluirItem(itemId: string, segundos = 0): Promise<R> {
   const db = await supabaseServer();
-  const { error } = await db.rpc('registrar_progresso', { p_item: itemId, p_pct: 100 });
+  const seg = Math.max(0, Math.min(36000, Math.round(Number(segundos) || 0)));
+  let { error } = await db.rpc('registrar_progresso', { p_item: itemId, p_pct: 100, p_segundos: seg });
+  // Banco ainda sem a migração 0015: usa a versão antiga da função.
+  if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) ({ error } = await db.rpc('registrar_progresso', { p_item: itemId, p_pct: 100 }));
   revalidatePath('/aluno', 'layout');
   return msg(error);
 }
@@ -63,6 +67,7 @@ export async function salvarRedacao(temaId: string, texto: string, enviar: boole
   const db = await supabaseServer();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return { ok: false, erro: 'Sessão expirada.' };
+  if (texto.length > 20000) return { ok: false, erro: 'O texto está grande demais.' };
   if (enviar && texto.trim().split(/\s+/).length < 30) return { ok: false, erro: 'Escreva um pouco mais antes de enviar (mínimo de 30 palavras).' };
   const { data: ex } = await db.from('redacoes').select('id,status').eq('tema_id', temaId).eq('aluno_id', user.id).maybeSingle();
   // Salvar rascunho de uma redação já enviada não a tira da fila de correção do professor.

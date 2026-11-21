@@ -3,6 +3,7 @@ import { exigirPerfil } from '@/lib/sessao';
 import { carregarTrilhas } from '@/lib/trilha';
 import { Icon } from '@/components/Icon';
 import { LinhaItem } from '@/components/Linha';
+import { normalizarSP } from '@/lib/consulta';
 import { Cab } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ const OFICIAL = 'https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exam
 const DIAS = [['1', '1º dia', 'Linguagens, Humanas e Redação'], ['2', '2º dia', 'Natureza e Matemática']] as const;
 
 export default async function Biblioteca({ searchParams }: { searchParams: Promise<{ aba?: string; d?: string; c?: string }> }) {
-  const sp = await searchParams; const aba = ABAS.find(a => a[0] === sp.aba)?.[0] ?? 'aulas';
+  const sp = normalizarSP(await searchParams); const aba = ABAS.find(a => a[0] === sp.aba)?.[0] ?? 'aulas';
   const { perfil, db } = await exigirPerfil('aluno');
   const { disciplinas } = await carregarTrilhas(db, perfil);
   const { data: recursos } = await db.from('recursos').select('*').eq('tipo', aba === 'cursos' ? 'curso' : 'repertorio').order('categoria').order('titulo');
@@ -41,8 +42,8 @@ export default async function Biblioteca({ searchParams }: { searchParams: Promi
                 <div key={d} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span className="sc-m"><b>{t}</b> · {area}</span>
                   <div className="row" style={{ gap: 8 }}>
-                    <a className="btn sm pri" href={`/api/enem?ano=${ano}&dia=${d}&tipo=prova`} download><Icon n="file" s={14} /> Prova</a>
-                    <a className="btn sm" href={`/api/enem?ano=${ano}&dia=${d}&tipo=gabarito`} download><Icon n="check" s={14} /> Gabarito</a>
+                    <a className="btn sm pri" href={`/api/enem?ano=${ano}&dia=${d}&tipo=prova`} target="_blank" rel="noopener noreferrer"><Icon n="file" s={14} /> Prova</a>
+                    <a className="btn sm" href={`/api/enem?ano=${ano}&dia=${d}&tipo=gabarito`} target="_blank" rel="noopener noreferrer"><Icon n="check" s={14} /> Gabarito</a>
                   </div>
                 </div>))}
             </div>))}</div>

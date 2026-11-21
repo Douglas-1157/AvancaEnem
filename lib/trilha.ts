@@ -55,9 +55,11 @@ export const rotuloTipo = { video: 'Aula', pdf: 'Apostila', sim: 'Simulado' } as
 export const iconeTipo = { video: 'play', pdf: 'file', sim: 'exam' } as const;
 
 export function semanaAtual(sessoes: { minutos: number; feito_em: string }[]) {
-  const hoje = new Date(); const dow = (hoje.getDay() + 6) % 7; // segunda = 0
-  const ini = new Date(hoje); ini.setHours(0, 0, 0, 0); ini.setDate(ini.getDate() - dow);
+  // Dias contados no horário de Brasília (o servidor roda em UTC): "agora" e cada sessão são deslocados 3h para trás.
+  const DESL = -3 * 3600000;
+  const agora = new Date(Date.now() + DESL); const dow = (agora.getUTCDay() + 6) % 7; // segunda = 0
+  const ini = Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate()) - dow * 86400000;
   const dias = [0, 0, 0, 0, 0, 0, 0];
-  for (const s of sessoes) { const d = new Date(s.feito_em); const k = Math.floor((+new Date(d.setHours(0, 0, 0, 0)) - +ini) / 86400000); if (k >= 0 && k < 7) dias[k] += s.minutos; }
-  return { dias, total: dias.reduce((a, b) => a + b, 0), hoje: dow, inicio: ini.toISOString() };
+  for (const s of sessoes) { const k = Math.floor((+new Date(s.feito_em) + DESL - ini) / 86400000); if (k >= 0 && k < 7) dias[k] += s.minutos; }
+  return { dias, total: dias.reduce((a, b) => a + b, 0), hoje: dow, inicio: new Date(ini - DESL).toISOString() };
 }

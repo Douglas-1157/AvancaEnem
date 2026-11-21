@@ -952,3 +952,28 @@ span.ord-b{visibility:hidden}
 @media (max-width:820px){.li-item .tx{flex-basis:calc(100% - 120px)}.li-acoes{width:100%;margin-left:0;padding-left:0}}
 .edit-t{margin-top:10px}.edit-t summary{list-style:none;display:inline-flex;cursor:pointer}.edit-t summary::-webkit-details-marker{display:none}
 .edit-t[open] summary{margin-bottom:10px}
+
+/* Equipe no rodapé da landing */
+.lteam{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 18px;padding-top:18px;border-top:1px solid var(--line)}
+.lteam a{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-weight:500;padding:4px 0}
+.lteam a:hover{color:var(--ink)}
+
+/* Listas grandes: busca, páginas e linhas que abrem para gerenciar */
+.busca{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.busca .inp{flex:1 1 200px;width:auto}
+.busca select.inp{flex:0 1 190px}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.rowd{border-top:1px solid var(--line)}
+.rowd:first-child{border-top:0}
+.rowd>summary{list-style:none;cursor:pointer;border-top:0}
+.rowd>summary::-webkit-details-marker{display:none}
+.rowd[open]{background:var(--shell);border-radius:12px}
+.rowd[open]>summary{padding-left:12px;padding-right:12px}
+.rowd-b{display:grid;gap:16px;padding:4px 12px 16px}
+.rowd-f{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+.btn.perigo{color:var(--bad);border-color:var(--bad)}
+.hist>summary{cursor:pointer}
+
+/* O menu da conta fica por cima dos cartões (o topo cria uma camada própria por causa do blur) */
+.top{z-index:20}
+.btn.seta{min-width:40px;font-size:20px;line-height:1;padding:4px 14px}

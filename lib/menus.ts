@@ -25,5 +25,5 @@ export function menuDe(papel: Papel, pendentes = { duvidas: 0, redacoes: 0, cada
     { href: '/professor/duvidas', label: 'Dúvidas', icon: 'chat', badge: pendentes.duvidas },
   ];
   if (papel === 'professor') return { menu: equipe, extra: [] };
-  return { menu: equipe, extra: [{ href: '/professor', label: 'Acompanhar turmas', icon: 'users' }, { href: '/professor/conteudo', label: 'Conteúdo', icon: 'folder' }, { href: '/professor/banco', label: 'Questões', icon: 'bank' }] };
+  return { menu: equipe, extra: [{ href: '/professor/conteudo', label: 'Conteúdo', icon: 'folder' }, { href: '/professor/banco', label: 'Questões', icon: 'bank' }] };
 }

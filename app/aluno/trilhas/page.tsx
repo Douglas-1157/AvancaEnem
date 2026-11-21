@@ -4,6 +4,7 @@ import { carregarTrilhas, iconeTipo, razaoBloqueio, type ItemTrilha, type Discip
 import { Icon } from '@/components/Icon';
 import { Pb, fmtPrazo } from '@/components/ui';
 import { hrefItem, tituloItem } from '@/components/Linha';
+import { normalizarSP } from '@/lib/consulta';
 import { Cab } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,7 @@ function Etapa({ it, d }: { it: ItemTrilha; d: Disciplina }) {
 export default async function Trilhas({ searchParams }: { searchParams: Promise<{ d?: string }> }) {
   const { perfil, db } = await exigirPerfil('aluno');
   const { disciplinas, trava } = await carregarTrilhas(db, perfil);
-  const sp = await searchParams;
+  const sp = normalizarSP(await searchParams);
   const d = disciplinas.find(x => x.id === sp.d) ?? disciplinas[0];
   if (!d) return <><div><h1 className="h1">Trilhas de aprendizagem</h1></div><div className="empty">Ainda não há conteúdo publicado para a sua turma.</div></>;
   const done = d.itens.filter(x => x.concluido).length, pc = Math.round((done / d.itens.length) * 100);

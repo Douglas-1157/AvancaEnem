@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { Form } from '@/components/Form';
 import { Logo } from '@/components/Logo';
+import { normalizarSP } from '@/lib/consulta';
 import { recuperarSenha } from '@/lib/acoes/senha';
 
 export default async function Recuperar({ searchParams }: { searchParams: Promise<{ erro?: string }> }) {
-  const sp = await searchParams;
+  const sp = normalizarSP(await searchParams);
   return (
     <div className="login full-bleed"><div className="lform">
       <div className="row"><Logo /><div><b style={{ fontWeight: 600 }}>Avança ENEM</b><div className="sub" style={{ fontSize: 13 }}>Plataforma de estudos</div></div></div>

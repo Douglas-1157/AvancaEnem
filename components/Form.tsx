@@ -5,13 +5,18 @@ export type Estado = { ok: boolean; msg: string; csv?: string; arquivo?: string 
 export const vazio: Estado = { ok: false, msg: '' };
 
 // Formulário ligado a uma Server Action, com mensagem de sucesso/erro embaixo.
-export function Form({ action, children, className = 'form', botao = 'Salvar', pri = true }: {
+export function Form({ action, children, className = 'form', botao = 'Salvar', pri = true, perigo = false, desabilitado = false, confirmar }: {
   action: (prev: Estado, fd: FormData) => Promise<Estado>; children: ReactNode; className?: string; botao?: string; pri?: boolean;
+  perigo?: boolean; desabilitado?: boolean; confirmar?: (fd: FormData) => string | null;
 }) {
   const [st, fn, pend] = useActionState(action, vazio);
   const ref = useRef<HTMLFormElement>(null);
   // Envia sem o "reset automático" do React: se der erro, o que a pessoa digitou fica. Só limpa quando salva com sucesso.
-  function enviar(e: FormEvent<HTMLFormElement>) { e.preventDefault(); const fd = new FormData(e.currentTarget); startTransition(() => fn(fd)); }
+  function enviar(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault(); const fd = new FormData(e.currentTarget);
+    const pergunta = confirmar?.(fd); if (pergunta && !window.confirm(pergunta)) return;
+    startTransition(() => fn(fd));
+  }
   useEffect(() => { if (st.ok && st.msg) ref.current?.reset(); }, [st]);
   function baixar() {
     if (!st.csv) return;
@@ -22,7 +27,7 @@ export function Form({ action, children, className = 'form', botao = 'Salvar', p
     <form ref={ref} onSubmit={enviar} className={className}>
       {children}
       <div className="full row">
-        <button className={`btn${pri ? ' pri' : ''}`} type="submit" disabled={pend}>{pend ? 'Aguarde…' : botao}</button>
+        <button className={`btn${pri ? ' pri' : ''}${perigo ? ' perigo' : ''}`} type="submit" disabled={pend || desabilitado}>{pend ? 'Aguarde…' : botao}</button>
         {st.msg && <span className={st.ok ? 'okmsg' : 'erro'} role={st.ok ? 'status' : 'alert'}>{st.msg}</span>}
         {st.csv && <button type="button" className="btn" onClick={baixar}>Baixar lista de senhas (CSV)</button>}
       </div>

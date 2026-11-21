@@ -29,12 +29,12 @@ export default async function Escola() {
         info={[['Alunos ativos', com.length], ['Professores', prof ?? 0], ['Estudo médio na semana', fmtMin(med)], ['Em risco', risco]]} />
       <Sugs titulo="Para resolver agora" itens={[
         { href: '/gestao/cadastros', cls: 's1', ic: 'school', rot: 'Cadastros', tit: np ? `${np} esperando aprovação` : 'Nenhum cadastro pendente', meta: 'Aprove alunos e professores' },
-        { href: '/professor', cls: 's2', ic: 'users', rot: 'Acompanhamento', tit: risco ? `${risco} aluno${risco > 1 ? 's' : ''} em risco` : 'Todos os alunos no ritmo', meta: 'Veja quem parou de estudar' },
+        { href: '/gestao/turmas?aba=acomp', cls: 's2', ic: 'users', rot: 'Acompanhamento', tit: risco ? `${risco} aluno${risco > 1 ? 's' : ''} em risco` : 'Todos os alunos no ritmo', meta: 'Veja quem parou de estudar' },
         { href: '/professor/redacoes', cls: 's3', ic: 'file', rot: 'Correções', tit: nr + nd ? `${nr} redaç${nr === 1 ? 'ão' : 'ões'} e ${nd} dúvida${nd === 1 ? '' : 's'}` : 'Sem pendências de professores', meta: 'Fila da equipe pedagógica' },
       ]} />
       <Atalhos titulo="Gerenciar" itens={[
         { href: '/gestao/cadastros', ic: 'school', t: 'Cadastros', d: 'Alunos e professores', n: np },
-        { href: '/gestao/turmas', ic: 'users', t: 'Turmas', d: 'Turmas e equipe' },
+        { href: '/gestao/turmas', ic: 'users', t: 'Turmas', d: 'Alunos, turmas e equipe' },
         { href: '/professor/conteudo', ic: 'folder', t: 'Conteúdo', d: 'Aulas e apostilas' },
         { href: '/professor/banco', ic: 'bank', t: 'Questões', d: 'Banco de questões' },
         { href: '/professor/redacoes', ic: 'file', t: 'Redações', d: 'Correções', n: nr },
@@ -56,7 +56,7 @@ export default async function Escola() {
                 <div key={k} className="perf"><span>{l}</span><Pb p={(n / com.length) * 100} cls={k === 'ok' ? 'ok' : ''} /><span className={`pill ${k}`}>{n}</span></div>))}</div>
             )}
           </div>
-          <div className="card foco-c"><h2 className="h2">Acompanhar turmas</h2><p className="sub" style={{ margin: '6px 0 12px' }}>Veja alunos em risco e o desempenho de cada um.</p><Link className="btn block" href="/professor">Abrir painel das turmas</Link></div>
+          <div className="card foco-c"><h2 className="h2">Acompanhar turmas</h2><p className="sub" style={{ margin: '6px 0 12px' }}>Veja alunos em risco e o desempenho de cada um.</p><Link className="btn block" href="/gestao/turmas?aba=acomp">Abrir acompanhamento</Link></div>
         </div>
       </div>
     </>

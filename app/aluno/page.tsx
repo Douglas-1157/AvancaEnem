@@ -53,7 +53,7 @@ export default async function Hoje() {
 
   return (
     <>
-      {!perfil.turma_id && <div className="note">Sua conta ainda não está em uma turma. Peça à gestão da escola para te incluir em uma.</div>}
+      {!perfil.turma_id && <div className="note">Você ainda não está em uma turma, por isso as trilhas, os simulados e as redações da sua turma não aparecem. Peça à gestão da escola para te incluir em uma; assim que isso acontecer, tudo é liberado aqui.</div>}
 
       <section className="wel">
         <div className="wel-id">

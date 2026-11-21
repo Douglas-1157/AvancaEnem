@@ -44,7 +44,7 @@ export default async function Simulados() {
         <div className="stack">
           <div className="card"><div className="row sb"><h2 className="h2">Suas notas</h2><span className="sub" style={{ fontSize: 13 }}>de 0 a 1000</span></div>
             <div style={{ marginTop: 6 }} className="list">{hist.length ? hist.map(t => (
-              <Link key={t.id} href={`/aluno/resultado/${t.id}`} className="li"><div className="tx"><b>{t.simulados?.titulo}{t.treino ? ' (treino)' : ''}</b><small>{new Date(t.finalizada_em).toLocaleDateString('pt-BR')}</small></div><div style={{ width: 90 }}><Pb p={Math.round(t.nota / 10)} /></div><b className="mono">{t.nota}</b></Link>))
+              <Link key={t.id} href={`/aluno/resultado/${t.id}`} className="li"><div className="tx"><b>{t.simulados?.titulo}{t.treino ? ' (treino)' : ''}</b><small>{new Date(t.finalizada_em).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</small></div><div style={{ width: 90 }}><Pb p={Math.round(t.nota / 10)} /></div><b className="mono">{t.nota}</b></Link>))
               : <div className="empty">Você ainda não fez nenhum simulado.</div>}</div></div>
           <div className="note">A nota é uma métrica da plataforma para você acompanhar a evolução. Não é a nota oficial do ENEM.</div>
         </div>

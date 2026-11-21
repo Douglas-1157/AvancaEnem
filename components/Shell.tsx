@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
 import { supabaseBrowser } from '@/lib/supabase/client';
@@ -37,7 +37,16 @@ function FocoTopo() {
 
 export function Shell({ menu, extra, nome, papel, children }: { menu: ItemMenu[]; extra?: ItemMenu[]; nome: string; papel: string; children: ReactNode }) {
   const path = usePathname(); const router = useRouter(); const [aberto, setAberto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null); const avRef = useRef<HTMLButtonElement>(null);
   useEffect(() => { setAberto(false); }, [path]);
+  // Fecha o menu da conta ao tocar em qualquer outro lugar da tela ou apertar Esc.
+  useEffect(() => {
+    if (!aberto) return;
+    const fora = (e: Event) => { const t = e.target as Node; if (!menuRef.current?.contains(t) && !avRef.current?.contains(t)) setAberto(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setAberto(false); };
+    document.addEventListener('pointerdown', fora); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', fora); document.removeEventListener('keydown', esc); };
+  }, [aberto]);
   const ativo = (m: ItemMenu) => (m.exato ? path === m.href : path === m.href || path.startsWith(m.href + '/'));
   const sair = async () => { await supabaseBrowser().auth.signOut(); router.replace('/entrar'); router.refresh(); };
   const prova = path.startsWith('/aluno/prova');
@@ -64,9 +73,9 @@ export function Shell({ menu, extra, nome, papel, children }: { menu: ItemMenu[]
           <span className="sp" />
           {path.startsWith('/aluno') && <FocoTopo />}
           <span className="who-top"><b>{nome}</b><small>{papel}</small></span>
-          <button className="av" onClick={() => setAberto(!aberto)} aria-label="Menu da conta" aria-expanded={aberto}>{iniciais(nome)}</button>
+          <button ref={avRef} className="av" onClick={() => setAberto(!aberto)} aria-label="Menu da conta" aria-expanded={aberto}>{iniciais(nome)}</button>
           {aberto && (
-            <div className="menu">
+            <div className="menu" ref={menuRef}>
               <div className="who"><b>{nome}</b><small>{papel}</small></div>
               {(extra ?? []).map(m => <Link key={m.href} href={m.href} className="nv"><Icon n={m.icon} /><span>{m.label}</span></Link>)}
               <Link href="/conta" className="nv"><Icon n="user" /><span>Minha conta</span></Link>

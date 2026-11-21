@@ -16,7 +16,7 @@ export default async function FocoPage() {
       <div className="cols">
         <Foco />
         <div className="card"><h2 className="h2">Últimas sessões</h2><div style={{ margin: '10px 0', fontSize: 24, fontWeight: 600 }}>{fmtMin(tot)}</div>
-          <div className="list">{(data ?? []).length ? data!.map((l, i) => <div key={i} className="li" style={{ padding: '10px 0' }}><div className="tx">{new Date(l.feito_em).toLocaleString('pt-BR', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}<small>{l.origem === 'foco' ? 'Bloco de foco' : 'Conteúdo concluído'}</small></div><span className="num">{l.minutos} min</span></div>) : <div className="empty">Nenhuma sessão ainda.</div>}</div></div>
+          <div className="list">{(data ?? []).length ? data!.map((l, i) => <div key={i} className="li" style={{ padding: '10px 0' }}><div className="tx">{new Date(l.feito_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', hour: '2-digit', minute: '2-digit' })}<small>{l.origem === 'foco' ? 'Bloco de foco' : l.origem === 'simulado' ? 'Simulado' : 'Aula ou apostila'}</small></div><span className="num">{l.minutos} min</span></div>) : <div className="empty">Nenhuma sessão ainda.</div>}</div></div>
       </div>
     </>
   );

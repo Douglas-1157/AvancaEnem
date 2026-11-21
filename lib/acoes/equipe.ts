@@ -105,6 +105,11 @@ async function enviarImagem(db: any, fd: FormData, campo: string): Promise<{ url
   const ext = TIPOS_IMG[file.type];
   if (!ext) return { url: null, erro: 'A imagem precisa ser PNG, JPG, WEBP ou GIF.' };
   if (file.size > 4 * 1024 * 1024) return { url: null, erro: `Essa imagem tem ${(file.size / 1048576).toFixed(1)} MB e o limite é 4 MB. Reduza o tamanho e envie de novo.` };
+  // Confere o conteúdo real do arquivo (o tipo informado pelo navegador pode ser falso).
+  const b = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+  const ascii = (i: number, n: number) => String.fromCharCode(...b.slice(i, i + n));
+  const real = (b[0] === 0x89 && ascii(1, 3) === 'PNG') ? 'png' : (b[0] === 0xff && b[1] === 0xd8) ? 'jpg' : (ascii(0, 3) === 'GIF') ? 'gif' : (ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP') ? 'webp' : '';
+  if (real !== ext) return { url: null, erro: 'Esse arquivo não é uma imagem válida (PNG, JPG, WEBP ou GIF).' };
   const caminho = `${crypto.randomUUID()}.${ext}`;
   const up = await db.storage.from('questoes').upload(caminho, file, { contentType: file.type });
   if (up.error) return { url: null, erro: 'Falha ao enviar a imagem: ' + up.error.message };
@@ -287,16 +292,68 @@ export async function excluirTurma(id: string): Promise<Estado> {
   revalidatePath('/gestao', 'layout'); revalidatePath('/professor', 'layout'); revalidatePath('/aluno', 'layout'); return ok('Turma excluída.');
 }
 export async function moverAluno(_: Estado, fd: FormData): Promise<Estado> {
-  const e = await gestao(); if (!e) return no('Sem permissão.');
-  const { error } = await e.db.from('profiles').update({ turma_id: txt(fd, 'turma_id') || null }).eq('id', txt(fd, 'id'));
-  if (error) return no(error.message);
-  revalidatePath('/gestao', 'layout'); return ok('Turma atualizada.');
+  try {
+    const e = await gestao(); if (!e) return no('Sem permissão.');
+    const turma = txt(fd, 'turma_id') || null; // vazio = deixar sem turma
+    const { data, error } = await e.db.from('profiles').update({ turma_id: turma }).eq('id', txt(fd, 'id')).eq('papel', 'aluno').select('id');
+    if (error) return no('Não foi possível mudar a turma: ' + error.message);
+    if (!data?.length) return no('Aluno não encontrado ou sem permissão para mudar.');
+    revalidatePath('/gestao', 'layout'); revalidatePath('/aluno', 'layout');
+    return ok(turma ? 'Turma atualizada.' : 'Aluno agora está sem turma.');
+  } catch { return no('Algo deu errado ao mudar a turma. Tente de novo.'); }
+}
+// Edita nome, cargo, disciplina e (para professor) as turmas em que leciona.
+export async function editarPessoa(_: Estado, fd: FormData): Promise<Estado> {
+  const e = await gestao(); if (!e) return no('Apenas a gestão edita a equipe.');
+  const id = txt(fd, 'id'), nome = txt(fd, 'nome');
+  if (!id || nome.length < 2) return no('Informe o nome.');
+  const { data: alvo } = await e.db.from('profiles').select('id,papel').eq('id', id).in('papel', ['professor', 'gestao']).maybeSingle();
+  if (!alvo) return no('Pessoa não encontrada.');
+  const pedido = txt(fd, 'papel');
+  const papel = pedido === 'gestao' || pedido === 'professor' ? pedido : alvo.papel;
+  if (id === e.id && papel !== alvo.papel) return no('Você não pode mudar o seu próprio cargo.');
+  const { error } = await e.db.from('profiles').update({ nome: nome.slice(0, 120), papel, disciplina_id: txt(fd, 'disciplina_id') || null }).eq('id', id);
+  if (error) return no('Não foi possível salvar.');
+  if (papel === 'professor') {
+    const turmas = fd.getAll('turmas').map(String).filter(Boolean);
+    const { error: e1 } = await e.db.from('professor_turmas').delete().eq('professor_id', id);
+    if (e1) return no('Salvou os dados, mas não as turmas. Tente de novo.');
+    if (turmas.length) { const { error: e2 } = await e.db.from('professor_turmas').insert(turmas.map(t => ({ professor_id: id, turma_id: t }))); if (e2) return no('Salvou os dados, mas não as turmas. Tente de novo.'); }
+  }
+  revalidatePath('/gestao', 'layout'); revalidatePath('/professor', 'layout');
+  return ok('Dados atualizados.');
+}
+// Exclui aluno ou membro da equipe. Só acontece com justificativa, que fica registrada na tabela "exclusoes".
+export async function excluirPessoa(_: Estado, fd: FormData): Promise<Estado> {
+  const e = await gestao(); if (!e) return no('Apenas a gestão exclui pessoas.');
+  const id = txt(fd, 'id'), motivo = txt(fd, 'motivo');
+  if (!id) return no('Pessoa não encontrada.');
+  if (motivo.length < 5) return no('Escreva a justificativa da exclusão (pelo menos 5 caracteres).');
+  if (id === e.id) return no('Você não pode excluir a si mesmo.');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return no('Falta configurar SUPABASE_SERVICE_ROLE_KEY no servidor.');
+  const admin = supabaseAdmin();
+  const { data: alvo } = await admin.from('profiles').select('id,nome,papel,turmas!profiles_turma_id_fkey(nome)').eq('id', id).maybeSingle();
+  if (!alvo) return no('Pessoa não encontrada (talvez já tenha sido excluída).');
+  if (alvo.papel === 'gestao') {
+    const { count } = await admin.from('profiles').select('id', { count: 'exact', head: true }).eq('papel', 'gestao').eq('status', 'ativo').neq('id', id);
+    if (!count) return no('Não dá para excluir a única pessoa da gestão.');
+  }
+  const { data: eu } = await e.db.from('profiles').select('nome').eq('id', e.id).single();
+  // Registra a justificativa antes; se a exclusão falhar, o registro é desfeito.
+  const { data: log, error: eLog } = await admin.from('exclusoes').insert({
+    pessoa_nome: alvo.nome, papel: alvo.papel, turma_nome: (alvo as any).turmas?.nome ?? null, motivo: motivo.slice(0, 500), excluido_por: e.id, excluido_por_nome: eu?.nome ?? null,
+  }).select('id').single();
+  if (eLog || !log) return no('Não foi possível registrar a justificativa. Rode a migração 0014 no Supabase e tente de novo.');
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) { await admin.from('exclusoes').delete().eq('id', log.id); return no('Não foi possível excluir. Tente de novo.'); }
+  revalidatePath('/gestao', 'layout'); revalidatePath('/professor', 'layout');
+  return ok(`${alvo.nome} foi excluído(a).`);
 }
 // Cria a conta de um professor (a gestão define uma senha provisória e repassa).
 export async function criarProfessor(_: Estado, fd: FormData): Promise<Estado> {
   const e = await gestao(); if (!e) return no('Apenas a gestão cadastra professores.');
-  const email = txt(fd, 'email'), nome = txt(fd, 'nome'), senha = String(fd.get('senha') ?? '');
-  if (!nome || !email || senha.length < 8) return no('Informe nome, e-mail e uma senha provisória de 8+ caracteres.');
+  const email = txt(fd, 'email').toLowerCase(), nome = txt(fd, 'nome'), senha = String(fd.get('senha') ?? '');
+  if (!nome || !/^\S+@\S+\.\S+$/.test(email) || senha.length < 8) return no('Informe nome, e-mail e uma senha provisória de 8+ caracteres.');
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return no('Falta configurar SUPABASE_SERVICE_ROLE_KEY no servidor.');
   const admin = supabaseAdmin();
   const { data, error } = await admin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { nome }, app_metadata: { trocar_senha: true } });
@@ -379,7 +436,7 @@ export async function importarAlunos(_: Estado, fd: FormData): Promise<Estado> {
   }
   revalidatePath('/gestao', 'layout');
   const resumo = `${criados} aluno(s) criado(s). Baixe a lista de senhas agora: ela não é mostrada de novo.`;
-  const csv = criados ? ['nome;email;senha_provisoria', ...entregues.map(x => [x.nome, x.email, x.senha].map(v => `"${v.replace(/"/g, '""')}"`).join(';'))].join('\r\n') : undefined;
+  const csv = criados ? ['nome;email;senha_provisoria', ...entregues.map(x => [x.nome, x.email, x.senha].map(v => `"${(/^[=+\-@\t\r]/.test(v) ? "'" + v : v).replace(/"/g, '""')}"`).join(';'))].join('\r\n') : undefined;
   const base = erros.length ? { ok: criados > 0, msg: `${resumo} Problemas: ${erros.slice(0, 8).join('; ')}${erros.length > 8 ? `… (+${erros.length - 8})` : ''}` } : ok(resumo);
   return { ...base, csv, arquivo: 'alunos-senhas-provisorias.csv' };
 }
