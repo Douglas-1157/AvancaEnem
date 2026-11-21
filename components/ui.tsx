@@ -20,5 +20,5 @@ export function fmtPrazo(prazo: string | null) {
   if (d === 1) return 'amanhã';
   return `até ${new Date(prazo + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')}`;
 }
-export const saudacao = () => { const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
+export const saudacao = () => { const h = new Date(Date.now() - 3 * 3600000).getUTCHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
 export const primeiroNome = (n: string) => n.split(' ')[0];

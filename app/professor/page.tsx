@@ -1,34 +1,42 @@
-import Link from 'next/link';
 import { exigirPerfil } from '@/lib/sessao';
-import { riscoDe } from '@/lib/risco';
-import { Av, Pb, fmtMin, saudacao, primeiroNome } from '@/components/ui';
+import { turmasVisiveis } from '@/lib/escopo';
+import { fmtMin, saudacao, primeiroNome } from '@/components/ui';
+import { Acompanhar, resumo } from '@/components/Acompanhar';
+import { qs, normalizarSP } from '@/lib/consulta';
+import { Boas, Sugs, Atalhos } from '@/components/Painel';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PainelTurmas({ searchParams }: { searchParams: Promise<{ turma?: string; f?: string }> }) {
-  const sp = await searchParams;
+export default async function PainelTurmas({ searchParams }: { searchParams: Promise<{ turma?: string; f?: string; q?: string; p?: string }> }) {
+  const sp = normalizarSP(await searchParams);
   const { perfil, db } = await exigirPerfil();
-  const [{ data: turmas }, { data: alunos }] = await Promise.all([
-    db.from('turmas').select('id,nome,turno,trava_progressiva').order('nome'),
+  const [{ data: turmas }, { data: alunos }, { count: nRed }, { count: nDuv }, { count: nItens }, { count: nQ }] = await Promise.all([
+    turmasVisiveis(db, perfil),
     db.from('painel_alunos').select('*'),
+    db.from('redacoes').select('id', { count: 'exact', head: true }).eq('status', 'enviada'),
+    db.from('duvidas').select('id', { count: 'exact', head: true }).eq('status', 'pendente'),
+    db.from('itens').select('id', { count: 'exact', head: true }).eq('publicado', true),
+    db.from('questoes').select('id', { count: 'exact', head: true }),
   ]);
-  const lista = (alunos ?? []).filter(a => !sp.turma || a.turma_id === sp.turma).map(a => ({ ...a, r: riscoDe(a.ultimo_estudo, a.min_semana, a.meta_semanal_min) }));
-  const ordem: Record<string, number> = { bad: 0, warn: 1, ok: 2 };
-  lista.sort((a, b) => ordem[a.r.nivel] - ordem[b.r.nivel] || a.nome.localeCompare(b.nome));
-  const vis = lista.filter(a => !sp.f || a.r.nivel === sp.f);
-  const med = lista.length ? Math.round(lista.reduce((s, a) => s + a.min_semana, 0) / lista.length) : 0;
-  const cont = (n: string) => lista.filter(a => a.r.nivel === n).length;
-  const q = (o: Record<string, string>) => '?' + new URLSearchParams({ ...(sp.turma ? { turma: sp.turma } : {}), ...o }).toString();
+  const { lista, med, cont } = resumo(alunos, sp.turma);
+  const nr = nRed ?? 0, nd = nDuv ?? 0;
   return (
     <>
-      <div><h1 className="h1">{saudacao()}, {primeiroNome(perfil.nome)}</h1><p className="sub">Veja quem precisa de você hoje.</p></div>
-      <div className="tabs" role="tablist"><Link className={!sp.turma ? 'on' : ''} href="/professor">Todas as turmas</Link>{turmas?.map(t => <Link key={t.id} className={sp.turma === t.id ? 'on' : ''} href={`?turma=${t.id}`}>{t.nome}</Link>)}</div>
-      <div className="facts"><div className="fact"><small>Alunos ativos</small><b>{lista.length}</b></div><div className="fact"><small>Estudo médio na semana</small><b>{fmtMin(med)}</b></div><div className="fact"><small>Em risco</small><b>{cont('bad')}</b></div><div className="fact"><small>Atenção</small><b>{cont('warn')}</b></div></div>
-      <div className="tabs" role="tablist">{[['', 'Todos', lista.length], ['bad', 'Em risco', cont('bad')], ['warn', 'Atenção', cont('warn')], ['ok', 'No ritmo', cont('ok')]].map(([k, l, n]) => <Link key={k as string} className={(sp.f ?? '') === k ? 'on' : ''} href={k ? q({ f: k as string }) : q({})}>{l}<span className="cnt">{n}</span></Link>)}</div>
-      <div className="card"><div className="list">{vis.length ? vis.map(a => (
-        <Link key={a.id} href={`/professor/aluno/${a.id}`} className="li"><Av nome={a.nome} sm /><div className="tx"><b>{a.nome}</b><small>{a.r.motivo} · {fmtMin(a.min_semana)} na semana{a.media != null ? ` · média ${a.media}` : ''}</small></div>
-          <div style={{ width: 90 }}><Pb p={(a.min_semana / a.meta_semanal_min) * 100} cls={a.r.nivel === 'ok' ? 'ok' : ''} /></div><span className={`pill ${a.r.nivel}`}>{a.r.rotulo}</span></Link>))
-        : <div className="empty">Nenhum aluno por aqui.</div>}</div></div>
+      <Boas nome={perfil.nome} saudacao={saudacao()} titulo={`${primeiroNome(perfil.nome)}, veja quem precisa de você`}
+        chips={<><span className="pill">{turmas?.length ?? 0} turma{(turmas?.length ?? 0) === 1 ? '' : 's'}</span><span className={`pill ${nr + nd ? 'warn' : 'ok'}`}>{nr + nd ? `${nr + nd} pendência${nr + nd > 1 ? 's' : ''}` : 'Nada pendente'}</span></>}
+        info={[['Alunos ativos', lista.length], ['Estudo médio na semana', fmtMin(med)], ['Em risco', cont('bad')], ['Pendências', nr + nd]]} />
+      <Sugs titulo="Precisa da sua atenção" itens={[
+        { href: '/professor/redacoes', cls: 's1', ic: 'file', rot: 'Redações', tit: nr ? `${nr} para corrigir` : 'Nenhuma para corrigir', meta: 'Corrija por competência' },
+        { href: '/professor/duvidas', cls: 's2', ic: 'chat', rot: 'Dúvidas', tit: nd ? `${nd} sem resposta` : 'Sem dúvidas abertas', meta: 'Responda direto da fila' },
+        { href: qs({ turma: sp.turma, f: 'bad' }), cls: 's3', ic: 'users', rot: 'Alunos em risco', tit: cont('bad') ? `${cont('bad')} aluno${cont('bad') > 1 ? 's' : ''} sem estudar` : 'Todos no ritmo', meta: 'Veja quem parou de estudar' },
+      ]} />
+      <Atalhos titulo="Suas ferramentas" itens={[
+        { href: '/professor/conteudo', ic: 'folder', t: 'Conteúdo', d: `${nItens ?? 0} publicado${nItens === 1 ? '' : 's'}` },
+        { href: '/professor/banco', ic: 'bank', t: 'Questões', d: `${nQ ?? 0} no banco` },
+        { href: '/professor/redacoes', ic: 'file', t: 'Redações', d: 'Corrigir e comentar', n: nr },
+        { href: '/professor/duvidas', ic: 'chat', t: 'Dúvidas', d: 'Responder alunos', n: nd },
+      ]} />
+      <Acompanhar alunos={alunos} turmas={turmas} sp={sp} base="/professor" />
     </>
   );
 }
