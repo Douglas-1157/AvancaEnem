@@ -5,6 +5,6 @@ export function riscoDe(ultimo: string | null, minSemana: number, meta: number):
   if (dias === null) return { nivel: 'bad', rotulo: 'Em risco', motivo: 'Ainda não estudou' };
   if (dias >= 7) return { nivel: 'bad', rotulo: 'Em risco', motivo: `Sem estudar há ${dias} dias` };
   if (dias >= 3) return { nivel: 'warn', rotulo: 'Atenção', motivo: `Sem estudar há ${dias} dias` };
-  if (minSemana < meta * 0.2 && new Date().getDay() >= 4) return { nivel: 'warn', rotulo: 'Atenção', motivo: 'Pouco estudo nesta semana' };
+  if (minSemana < meta * 0.2 && new Date(Date.now() - 3 * 3600000).getUTCDay() >= 4) return { nivel: 'warn', rotulo: 'Atenção', motivo: 'Pouco estudo nesta semana' };
   return { nivel: 'ok', rotulo: 'No ritmo', motivo: dias === 0 ? 'Estudou hoje' : `Estudou há ${dias} dia${dias > 1 ? 's' : ''}` };
 }
